@@ -1,0 +1,10 @@
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\Toggl_to_PI_1.exe.config
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\Toggl_to_PI_1.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\Toggl_to_PI_1.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\obj\Debug\Toggl_to_PI_1.csprojResolveAssemblyReference.cache
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\obj\Debug\Toggl_to_PI_1.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\obj\Debug\Toggl_to_PI_1.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\Fitbit.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\RestSharp.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\Fitbit.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\Toggl_to_PI_1\Toggl_to_PI_1\bin\Debug\RestSharp.xml

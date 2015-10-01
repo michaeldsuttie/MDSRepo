@@ -1,0 +1,14 @@
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\bin\Debug\Fitbit_to_PI.exe.config
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\bin\Debug\Fitbit_to_PI.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\bin\Debug\Fitbit_to_PI.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.csprojResolveAssemblyReference.cache
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\MainWindow.g.cs
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\App.g.cs
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI_MarkupCompile.cache
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI_MarkupCompile.lref
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\MainWindow.baml
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.g.resources
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.Properties.Resources.resources
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.csproj.GenerateResource.Cache
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\Fitbit_to_PI\Fitbit_to_PI\obj\Debug\Fitbit_to_PI.pdb
