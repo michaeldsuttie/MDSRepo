@@ -1,0 +1,16 @@
+2015-11-04 16:04:48.4544: INFO: LogConfigured: 'DebugLog'
+2015-11-04 16:04:48.4544: INFO: PI Server: DST-S5155-VM
+2015-11-04 16:04:48.4734: INFO: Start Time: 01-Oct-2015 00:00:00
+2015-11-04 16:04:48.4734: INFO: End Time: 01-Oct-2015 23:59:00
+2015-11-04 16:04:48.4734: INFO: Tag added to List: 1022.meter_Enphase_166266.energy_daily
+2015-11-04 16:04:49.0608: INFO: Trying anonymous connection to: DST-S5155-VM
+2015-11-04 16:04:49.3060: INFO: Successfully connected to: DST-S5155-VM
+2015-11-04 16:04:49.3350: INFO: PIPoint Added to List: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 16:04:49.3570: INFO: Retrieved values for: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 16:04:49.3620: INFO: Moving values for PIPoint: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 16:04:49.3620: INFO: 2 values found.
+2015-11-04 16:04:49.3620: INFO: Value found: 10/1/2015 12:00:00 AM | 123
+2015-11-04 16:04:49.3810: INFO: Value found: 10/1/2015 1:00:00 AM | 0
+2015-11-04 16:04:54.2745: INFO: 00:00 value removed: 10/1/2015 12:00:00 AM | 123
+2015-11-04 16:04:54.3115: INFO: Value found: 10/1/2015 1:00:00 AM | 0
+2015-11-04 16:05:03.0536: INFO: Exiting app at: 11/4/2015 4:05:03 PM

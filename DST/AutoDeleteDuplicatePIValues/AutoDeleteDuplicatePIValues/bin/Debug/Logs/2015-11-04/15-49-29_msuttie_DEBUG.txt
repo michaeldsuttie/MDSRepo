@@ -1,0 +1,14 @@
+2015-11-04 15:49:29.8807: INFO: LogConfigured: 'DebugLog'
+2015-11-04 15:49:29.8977: INFO: PI Server: DST-S5155-VM
+2015-11-04 15:49:29.8977: INFO: Start Time: 01-Oct-2015 12:00:00
+2015-11-04 15:49:29.8977: INFO: End Time: 02-Oct-2015 12:00:00
+2015-11-04 15:49:29.8977: INFO: Tag added to List: 1022.meter_Enphase_166266.energy_daily
+2015-11-04 15:49:30.4490: INFO: Trying anonymous connection to: DST-S5155-VM
+2015-11-04 15:49:30.7652: INFO: Successfully connected to: DST-S5155-VM
+2015-11-04 15:49:30.8062: INFO: PIPoint Added to List: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 15:49:30.8412: INFO: Retrieved values for: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 15:49:30.8412: INFO: Moving values for PIPoint: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 15:49:30.8412: INFO: 1 values found.
+2015-11-04 15:49:30.8552: INFO:  1:00:00 AM
+2015-11-04 15:49:30.8552: INFO: Value found: 10/2/2015 1:00:00 AM | 0
+2015-11-04 15:49:30.8552: INFO: No non-midnight values found for: 1022.meter_Enphase_166266.Energy_Daily

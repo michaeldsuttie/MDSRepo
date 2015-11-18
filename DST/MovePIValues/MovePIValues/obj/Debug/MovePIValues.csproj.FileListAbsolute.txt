@@ -18,5 +18,6 @@ E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PISDKCom
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PITimeServer.dll
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\NLog.xml
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.pdb
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.csprojResolveAssemblyReference.cache
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.exe
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.pdb

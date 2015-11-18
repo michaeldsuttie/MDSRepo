@@ -1,0 +1,8 @@
+2015-11-04 15:58:42.0730: INFO: LogConfigured: 'DebugLog'
+2015-11-04 15:58:42.0910: INFO: PI Server: DST-S5155-VM
+2015-11-04 15:58:42.0950: INFO: Start Time: 01-Oct-2015 12:00:00
+2015-11-04 15:58:42.1180: INFO: End Time: 02-Oct-2015 12:00:00
+2015-11-04 15:58:42.1180: INFO: Tag added to List: 1022.meter_Enphase_166266.energy_daily
+2015-11-04 15:58:42.7134: INFO: Trying anonymous connection to: DST-S5155-VM
+2015-11-04 15:58:43.0897: INFO: Successfully connected to: DST-S5155-VM
+2015-11-04 15:58:43.1217: INFO: PIPoint Added to List: 1022.meter_Enphase_166266.Energy_Daily

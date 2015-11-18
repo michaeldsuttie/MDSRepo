@@ -1,5 +1,4 @@
-workingDirectory,C:\Users\msuttie\Desktop\testdir\taglist.csv
-piServer,PFS1
-startTime,8/7/2015 0:00
-endTime,8/9/2015 0:00
-x,1022.meter_Enphase_PVP0008359 - Enlighten.energy_daily
+PIServer,DST-S5155-VM
+StartTime,10/10/2015 0:00
+EndTime,10/20/2015 0:00
+x,1022.meter_Enphase_166266.energy_daily

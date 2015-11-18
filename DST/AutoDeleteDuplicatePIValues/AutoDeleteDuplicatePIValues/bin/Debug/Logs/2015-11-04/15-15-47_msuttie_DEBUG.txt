@@ -1,0 +1,2 @@
+2015-11-04 15:15:47.2503: INFO: LogConfigured: 'DebugLog'
+2015-11-04 15:15:51.3791: INFO: PI Server: DST-S5155-VM

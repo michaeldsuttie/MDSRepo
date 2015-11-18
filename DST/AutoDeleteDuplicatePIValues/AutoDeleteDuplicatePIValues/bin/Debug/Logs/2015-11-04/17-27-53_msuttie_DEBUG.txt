@@ -1,0 +1,28 @@
+2015-11-04 17:27:53.2813: INFO: LogConfigured: 'DebugLog'
+2015-11-04 17:27:53.2994: INFO: PI Server: DST-S5155-VM
+2015-11-04 17:27:53.3044: INFO: Start Time: 10-Oct-2015 00:00:00
+2015-11-04 17:27:53.3044: INFO: End Time: 19-Oct-2015 23:59:00
+2015-11-04 17:27:53.3044: INFO: Tag added to List: 1022.meter_Enphase_166266.energy_daily
+2015-11-04 17:27:53.8477: INFO: Trying anonymous connection to: DST-S5155-VM
+2015-11-04 17:27:54.2510: INFO: Successfully connected to: DST-S5155-VM
+2015-11-04 17:27:54.2860: INFO: PIPoint Added to List: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 17:27:54.3030: INFO: Retrieved values for: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 17:27:54.3050: INFO: Moving values for PIPoint: 1022.meter_Enphase_166266.Energy_Daily
+2015-11-04 17:27:54.3050: INFO: 10 values found.
+2015-11-04 17:27:54.3050: INFO: Value found: 10/10/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3050: INFO: Value found: 10/11/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3050: INFO: Value found: 10/12/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3050: INFO: Value found: 10/13/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3050: INFO: Value found: 10/14/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3200: INFO: Value found: 10/15/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3200: INFO: Value found: 10/16/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3200: INFO: Value found: 10/17/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3200: INFO: Value found: 10/18/2015 12:00:00 AM | 0
+2015-11-04 17:27:54.3451: INFO: Value found: 10/19/2015 12:00:00 AM | 0
+2015-11-04 17:28:00.0521: INFO: Value not processed: 10/10/2015 12:00:00 AM | 0
+2015-11-04 17:28:04.7080: INFO: Value not processed: 10/11/2015 12:00:00 AM | 0
+2015-11-04 17:28:05.5937: INFO: Value not processed: 10/12/2015 12:00:00 AM | 0
+2015-11-04 17:28:06.2042: INFO: Value not processed: 10/13/2015 12:00:00 AM | 0
+2015-11-04 17:28:06.7417: INFO: Value not processed: 10/14/2015 12:00:00 AM | 0
+2015-11-04 17:28:07.1921: INFO: Value not processed: 10/15/2015 12:00:00 AM | 0
+2015-11-04 17:28:07.6094: INFO: Value not processed: 10/16/2015 12:00:00 AM | 0
