@@ -1,0 +1,22 @@
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\MovePIValues.exe.config
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\MovePIValues.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\MovePIValues.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PISDKCommon.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PITimeServer.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PISDK.dll
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\obj\Debug\MovePIValues.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\MovePIValues\MovePIValues\obj\Debug\MovePIValues.pdb
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\NLog.config
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\MovePIValues.exe.config
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\MovePIValues.exe
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\MovePIValues.pdb
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\NLog.dll
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.dll
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PISDKCommon.dll
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.PITimeServer.dll
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\NLog.xml
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.pdb
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.exe
+E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.pdb

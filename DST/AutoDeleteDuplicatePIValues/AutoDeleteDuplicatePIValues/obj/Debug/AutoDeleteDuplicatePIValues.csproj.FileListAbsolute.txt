@@ -1,0 +1,13 @@
+c:\users\msuttie\documents\visual studio 2015\Projects\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.exe.config
+c:\users\msuttie\documents\visual studio 2015\Projects\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.pdb
+c:\users\msuttie\documents\visual studio 2015\Projects\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.exe
+c:\users\msuttie\documents\visual studio 2015\Projects\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.pdb
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.exe.config
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.exe
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.pdb
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\NLog.dll
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\NLog.xml
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.csprojResolveAssemblyReference.cache
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.exe
+E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.pdb
