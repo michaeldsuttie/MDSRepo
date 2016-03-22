@@ -1,0 +1,62 @@
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Web.Http;
+
+namespace dashboard.Controllers
+{
+    public class KPIController : ApiController
+    {
+        private string serverUrl = @"https://skypi.cloudapp.net/piwebapi";
+        private string baseDatabase = @"\\DST-S5155-VM\OSIsoftLab";
+
+        public async Task<JArray> GetKPIs()
+        {
+            var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
+            string authInfo = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(String.Format("{0}:{1}", "lbowling", "OFNxBKOZmG1w")));
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authInfo);
+
+            try
+            {
+                //this will cause the server call to ingore invailid SSL Cert - should remove for production
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
+                //string uri = @"https://piwebapi.dstcontrols.com/piwebapi/streams/A0ERCRoEQjjJ06jHBU6_gMSNgZ1pM38nK5RGCsCBonSyzwg-2sVGT7ns0Guq-IKIDSoVARFNULVM1MTU1LVZNXE9TSVNPRlRMQUJcU0hPUlRET0d8NU1JTlBST0RVQ1RJT05fT1VUUFVU/plot";
+                //string uri = @"https://skypi.cloudapp.net/piwebapi/streamsets/E0Czyy3eCeikGP8xKA9NPlTgUdWvCR8g5RGUEgAVXURsEwU0tZUElcUElET0dcRUxFTUVOVDEz/plot";
+                string uri = @"https://piwebapi.dstcontrols.com/piwebapi/streams/A0ERCRoEQjjJ06jHBU6_gMSNgZ1pM38nK5RGCsCBonSyzwgB4asJ4gVTVcml7xDnAJLLQRFNULVM1MTU1LVZNXE9TSVNPRlRMQUJcQU5URVJPU3w1TUlOUFJPRFVDVElPTl9PVVRQVVQ/plot";
+                HttpResponseMessage response = await client.GetAsync(uri);
+
+                string content = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseMessage = "Response status code does not indicate success: " + (int)response.StatusCode + " (" + response.StatusCode + " ). ";
+                    throw new HttpRequestException(responseMessage + Environment.NewLine + content);
+                }
+
+                var data = (JArray)JObject.Parse(content)["Items"];
+                var result = new JArray();
+                foreach (var item in data)
+                {
+                    if (item["Good"].Value<bool>())
+                    {
+                        var dataPair = new JObject();
+                        dataPair.Add("Timestamp", item["Timestamp"].Value<string>());
+                        dataPair.Add("Value", item["Value"].Value<double>());
+                        result.Add(dataPair);
+                    }
+                }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+    }
+}
