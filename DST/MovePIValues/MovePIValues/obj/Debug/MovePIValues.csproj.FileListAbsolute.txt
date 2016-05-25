@@ -21,3 +21,4 @@ E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\bin\Debug\OSIsoft.AFSDK.pd
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.csprojResolveAssemblyReference.cache
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.exe
 E:\@sourcetree\CodeRepo\DST\MovePIValues\MovePIValues\obj\Debug\MovePIValues.pdb
+E:\@sourcetree\MDSRepo\DST\MovePIValues\MovePIValues\bin\Debug\MovePIValues.exe.config

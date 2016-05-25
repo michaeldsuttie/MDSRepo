@@ -13,3 +13,4 @@ E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIVal
 E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\OSIsoft.AFSDK.pdb
 E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.exe
 E:\@sourcetree\CodeRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\obj\Debug\AutoDeleteDuplicatePIValues.pdb
+E:\@sourcetree\MDSRepo\DST\AutoDeleteDuplicatePIValues\AutoDeleteDuplicatePIValues\bin\Debug\AutoDeleteDuplicatePIValues.exe.config
