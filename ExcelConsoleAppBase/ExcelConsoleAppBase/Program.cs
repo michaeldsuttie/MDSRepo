@@ -12,20 +12,27 @@ namespace ExcelConsoleAppBase
     class Program
     {
         private static Logger DebugLog;
-        private static List<string> Headers { get; set; }
+        //private static List<string> Headers { get; set; }
         public static Tag PreviousTag { get; set; }
+        public static List<Tag> ErrorTags { get; set; }
 
         static void Main(string[] args)
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
-            var fileName = "Foley_Rnch";
+            var fileName01 = "Foley_Rnch";
+            var fileName02 = "Livermore_Jct";
+            var fileName03 = "LRCV_419B";
             //string filename = args[0].ToString();
+            ErrorTags = new List<Tag>();
 
-            var csvContent = parseCSV($"{AppDomain.CurrentDomain.BaseDirectory}{fileName}.csv");
+            var csvContent = parseCSV($"{AppDomain.CurrentDomain.BaseDirectory}{fileName01}.csv");
 
             foreach (var record in csvContent)
             {
-                WriteToLog(DebugLog, "info", $"name: {record.Value.name} | register_EURange: {record.Value.register_EURange} | DataType: {record.Value.DataType} | LowClear_RegisterValue: {record.Value.LowClear_RegisterValue} | LowClear_ExpectedResult: {record.Value.LowClear_ExpectedResult} | Underrange_RegisterValue: {record.Value.Underrange_RegisterValue} | Underrange_ExpectedResult: {record.Value.Underrange_ExpectedResult} | Overrange_RegisterValue: {record.Value.Overrange_RegisterValue} | Overrange_ExpectedResult: {record.Value.Overrange_ExpectedResult} | LL_RegisterValue: {record.Value.LL_RegisterValue} | LL_ExpectedResult: {record.Value.LL_ExpectedResult} | L_RegisterValue: {record.Value.L_RegisterValue} | L_ExpectedResult: {record.Value.L_ExpectedResult} | H_RegisterValue: {record.Value.H_RegisterValue} | H_ExpectedResult: {record.Value.H_ExpectedResult} | HH_RegisterValue: {record.Value.HH_RegisterValue} | HH_ExpectedResult: {record.Value.HH_ExpectedResult} | MOP_RegisterValue: {record.Value.MOP_RegisterValue} | MOP_ExpectedResult: {record.Value.MOP_ExpectedResult} | HighClear_RegisterValue: {record.Value.HighClear_RegisterValue} | HighClear_ExpectedResult: {record.Value.HighClear_ExpectedResult}");
+                //WriteToLog(DebugLog, "info", $"name: {record.Value.name} | register_EURange: {record.Value.register_EURange} | DataType: {record.Value.DataType} | LowClear_RegisterValue: {record.Value.LowClear_RegisterValue} | LowClear_ExpectedResult: {record.Value.LowClear_ExpectedResult} | Underrange_RegisterValue: {record.Value.Underrange_RegisterValue} | Underrange_ExpectedResult: {record.Value.Underrange_ExpectedResult} | Overrange_RegisterValue: {record.Value.Overrange_RegisterValue} | Overrange_ExpectedResult: {record.Value.Overrange_ExpectedResult} | LL_RegisterValue: {record.Value.LL_RegisterValue} | LL_ExpectedResult: {record.Value.LL_ExpectedResult} | L_RegisterValue: {record.Value.L_RegisterValue} | L_ExpectedResult: {record.Value.L_ExpectedResult} | H_RegisterValue: {record.Value.H_RegisterValue} | H_ExpectedResult: {record.Value.H_ExpectedResult} | HH_RegisterValue: {record.Value.HH_RegisterValue} | HH_ExpectedResult: {record.Value.HH_ExpectedResult} | MOP_RegisterValue: {record.Value.MOP_RegisterValue} | MOP_ExpectedResult: {record.Value.MOP_ExpectedResult} | HighClear_RegisterValue: {record.Value.HighClear_RegisterValue} | HighClear_ExpectedResult: {record.Value.HighClear_ExpectedResult}");
+                var parametersValid = ParseParameters(record.Value);
+                if (ErrorTags.Contains(record.Value)) continue;
+                var progressionValid = CheckValueProgression(record.Value);
             }
             ExitApp();
         }
@@ -76,7 +83,7 @@ namespace ExcelConsoleAppBase
                 {
                     string line;
                     int rowIndex = 0;
-                    Headers = new List<string>();
+                    //Headers = new List<string>();
                     PreviousTag = new Tag();
                     var CSVContent = new Dictionary<string, Tag>();
                     var templist = new List<string>();
@@ -84,22 +91,23 @@ namespace ExcelConsoleAppBase
                     while ((line = readFile.ReadLine()) != null)
                     {
                         string[] row = line.Split(',');
-                        if (row[1].Contains("Cmd"))
+                        if (row[1].Contains("_Cmd") || (!row[1].Contains("_") && !PreviousTag.name.Contains("_")))
                         {
+                            rowIndex++;
                             continue;
                         }
-                        if (row[0] == "Process Value (PV) Description")
-                        {
-                            var headerString = "Headers: ";
-                            foreach (var h in row)
-                            {
-                                Headers.Add(h);
-                                headerString += $"{h},";
-                            }
-                            headerString = headerString.Remove(headerString.Length - 1, 1);
-                            WriteToLog(DebugLog, "info", headerString);
-                        }
-                        else if (CSVContent.ContainsKey((row[1] == string.Empty ? PreviousTag.name: row[1])))
+                        //if (row[0] == "Process Value (PV) Description")
+                        //{
+                        //    var headerString = "Headers: ";
+                        //    foreach (var h in row)
+                        //    {
+                        //        Headers.Add(h);
+                        //        headerString += $"{h},";
+                        //    }
+                        //    headerString = headerString.Remove(headerString.Length - 1, 1);
+                        //    WriteToLog(DebugLog, "info", headerString);
+                        //}
+                        if (CSVContent.ContainsKey((row[1] == string.Empty ? PreviousTag.name : row[1])))
                         {
                             var record = CSVContent.Where(x => x.Key == PreviousTag.name).FirstOrDefault();
                             for (int i = 0; i < row.Count(); i++)
@@ -181,7 +189,7 @@ namespace ExcelConsoleAppBase
                                 }
                             }
                         }
-                        else if (!CSVContent.ContainsKey(row[1]) && rowIndex >= 1)
+                        else if (!CSVContent.ContainsKey(row[1]) && rowIndex >= 2)
                         {
                             if (PreviousTag == null)
                             {
@@ -226,9 +234,9 @@ namespace ExcelConsoleAppBase
                             WriteToLog(DebugLog, "info", $"Row[{rowIndex}] not processed.");
                         }
 
-                        rowIndex += 1;
+                        rowIndex++;
                     }
-                    WriteToLog(DebugLog, "info", $"Sucessfully parsed CSV @ '{_path}'");
+                    WriteToLog(DebugLog, "info", $"Sucessfully parsed CSV @ '{_path}'. {CSVContent.Count} Tags added.");
                     return CSVContent;
                 }
             }
@@ -238,12 +246,137 @@ namespace ExcelConsoleAppBase
                 return null;
             }
         }
+
+        public static bool CheckValueProgression(Tag _Tag)
+        {
+            try
+            {
+                var result = false;
+                if (_Tag.DataType == "REAL")
+                {
+                    if (!_Tag.DoubleParameters.ContainsKey("LL_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"No parameters to verify are in increasing order for tag '{_Tag.name}'");
+                        return true;
+                    }
+                    var check1 = _Tag.DoubleParameters["LL_RegisterValue"] < _Tag.DoubleParameters["L_RegisterValue"];
+                    var check2 = _Tag.DoubleParameters["L_RegisterValue"] < _Tag.DoubleParameters["H_RegisterValue"];
+                    var check3 = _Tag.DoubleParameters["H_RegisterValue"] < _Tag.DoubleParameters["HH_RegisterValue"];
+                    var check4 = true;
+                    if (_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue"))
+                    {
+                        check4 = _Tag.DoubleParameters["HH_RegisterValue"] < _Tag.DoubleParameters["MOP_RegisterValue"];
+                    }
+                    result = check1 && check2 && check3 && check4;
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (!_Tag.IntParameters.ContainsKey("LL_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"No parameters to verify are in increasing order for tag '{_Tag.name}'");
+                        return true;
+                    }
+                    var check1 = _Tag.IntParameters["LL_RegisterValue"] < _Tag.IntParameters["L_RegisterValue"];
+                    var check2 = _Tag.IntParameters["L_RegisterValue"] < _Tag.IntParameters["H_RegisterValue"];
+                    var check3 = _Tag.IntParameters["H_RegisterValue"] < _Tag.IntParameters["HH_RegisterValue"];
+                    var check4 = true;
+                    if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue"))
+                    {
+                        check4 = _Tag.IntParameters["HH_RegisterValue"] < _Tag.IntParameters["MOP_RegisterValue"];
+                    }
+                    result = check1 && check2 && check3 && check4;
+                }
+                if (result)
+                {
+                    WriteToLog(DebugLog, "info", $"Successfully verified parameters are in increasing order for tag '{_Tag.name}'");
+                    return true;
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "info", $"Parameters are not in order for tag '{_Tag.name}'.");
+                    ErrorTags.Add(_Tag);
+                    return false;
+                }
+            }
+            catch (Exception EX_ParseParameters)
+            {
+                WriteToLog(DebugLog, "error", $"Could not verify parameter order for tag '{_Tag.name}': {EX_ParseParameters}");
+                ErrorTags.Add(_Tag);
+                return false;
+            }
+        }
+
+        public static bool ParseParameters(Tag _Tag)
+        {
+            try
+            {
+                if (_Tag.DataType == "REAL")
+                {
+                    if (_Tag.LL_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("LL_RegisterValue", double.Parse(_Tag.LL_RegisterValue));
+                    }
+                    if (_Tag.L_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("L_RegisterValue", double.Parse(_Tag.L_RegisterValue));
+                    }
+                    if (_Tag.H_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("H_RegisterValue", double.Parse(_Tag.H_RegisterValue));
+                    }
+                    if (_Tag.HH_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("HH_RegisterValue", double.Parse(_Tag.HH_RegisterValue));
+                    }
+                    if (_Tag.MOP_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(_Tag.MOP_RegisterValue));
+                    }
+                    WriteToLog(DebugLog, "info", $"Successfully parsed parameters for tag '{_Tag.name}'");
+
+                    return true;
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (_Tag.LL_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("LL_RegisterValue", int.Parse(_Tag.LL_RegisterValue));
+                    }
+                    if (_Tag.L_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("L_RegisterValue", int.Parse(_Tag.L_RegisterValue));
+                    }
+                    if (_Tag.H_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("H_RegisterValue", int.Parse(_Tag.H_RegisterValue));
+                    }
+                    if (_Tag.HH_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("HH_RegisterValue", int.Parse(_Tag.HH_RegisterValue));
+                    }
+                    if (_Tag.MOP_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("MOP_RegisterValue", int.Parse(_Tag.MOP_RegisterValue));
+                    }
+                    WriteToLog(DebugLog, "info", $"Successfully parsed parameters for tag '{_Tag.name}'");
+
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception EX_ParseParameters)
+            {
+                WriteToLog(DebugLog, "error", $"Could not parse parameters for tag '{_Tag.name}': {EX_ParseParameters}");
+                return false;
+            }
+        }
     }
     public class Tag
     {
         public string name = string.Empty;
         public string register_EURange = string.Empty;
         public string DataType = string.Empty;
+
         public string LowClear_RegisterValue = string.Empty;
         public string LowClear_ExpectedResult = string.Empty;
         public string Underrange_RegisterValue = string.Empty;
@@ -262,5 +395,8 @@ namespace ExcelConsoleAppBase
         public string Overrange_ExpectedResult = string.Empty;
         public string HighClear_RegisterValue = string.Empty;
         public string HighClear_ExpectedResult = string.Empty;
+
+        public Dictionary<string, int> IntParameters = new Dictionary<string, int>();
+        public Dictionary<string, double> DoubleParameters = new Dictionary<string, double>();
     }
 }
