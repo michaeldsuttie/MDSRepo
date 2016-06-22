@@ -11,7 +11,7 @@ namespace ExcelConsoleAppBase
 {
     class Program
     {
-        private static Logger DebugLog;
+        private static Logger DebugLog { get; set; }
         //private static List<string> Headers { get; set; }
         public static Tag PreviousTag { get; set; }
         public static List<Tag> ErrorTags { get; set; }
@@ -19,13 +19,18 @@ namespace ExcelConsoleAppBase
         static void Main(string[] args)
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
-            var fileName01 = "Foley_Rnch";
-            var fileName02 = "Livermore_Jct";
-            var fileName03 = "LRCV_419B";
-            //string filename = args[0].ToString();
+            //var fileName01 = "Foley_Rnch";
+            //var fileName02 = "Livermore_Jct";
+            //var fileName03 = "LRCV_419B";
+            //var fileName04 = "Martinez_Sta";
+            //var fileName05 = "Old_Redwood";
+            //var fileName06 = "Palm_Tract";
+            //var fileName07 = "Tracy_Sta";
+            //var fileName08 = "Vernalis_Meter";
+            string fileName = args[0].ToString();
             ErrorTags = new List<Tag>();
 
-            var csvContent = parseCSV($"{AppDomain.CurrentDomain.BaseDirectory}{fileName01}.csv");
+            var csvContent = parseCSV($"{AppDomain.CurrentDomain.BaseDirectory}{fileName}.csv");
 
             foreach (var record in csvContent)
             {
@@ -33,7 +38,12 @@ namespace ExcelConsoleAppBase
                 var parametersValid = ParseParameters(record.Value);
                 if (ErrorTags.Contains(record.Value)) continue;
                 var progressionValid = CheckValueProgression(record.Value);
+                var clearValid = CheckClearValue(record.Value);
+                var underrangeValid = CheckUnderrange(record.Value);
+                var overrangeValid = CheckOverrange(record.Value);
             }
+            DisplayErrorTags(ErrorTags);
+
             ExitApp();
         }
 
@@ -242,7 +252,15 @@ namespace ExcelConsoleAppBase
             }
             catch (Exception EX_ParseCSV)
             {
-                WriteToLog(DebugLog, "error", $"Could not parse CSV: {EX_ParseCSV}");
+                if (EX_ParseCSV.HResult == -2147024864)
+                {
+                    WriteToLog(DebugLog, "error", $"Could not parse CSV. Please close file and try again.");
+                    ExitApp();
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "error", $"Could not parse CSV: {EX_ParseCSV}");
+                }
                 return null;
             }
         }
@@ -256,7 +274,7 @@ namespace ExcelConsoleAppBase
                 {
                     if (!_Tag.DoubleParameters.ContainsKey("LL_RegisterValue"))
                     {
-                        WriteToLog(DebugLog, "info", $"No parameters to verify are in increasing order for tag '{_Tag.name}'");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing order.");
                         return true;
                     }
                     var check1 = _Tag.DoubleParameters["LL_RegisterValue"] < _Tag.DoubleParameters["L_RegisterValue"];
@@ -273,7 +291,7 @@ namespace ExcelConsoleAppBase
                 {
                     if (!_Tag.IntParameters.ContainsKey("LL_RegisterValue"))
                     {
-                        WriteToLog(DebugLog, "info", $"No parameters to verify are in increasing order for tag '{_Tag.name}'");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing order.");
                         return true;
                     }
                     var check1 = _Tag.IntParameters["LL_RegisterValue"] < _Tag.IntParameters["L_RegisterValue"];
@@ -288,20 +306,22 @@ namespace ExcelConsoleAppBase
                 }
                 if (result)
                 {
-                    WriteToLog(DebugLog, "info", $"Successfully verified parameters are in increasing order for tag '{_Tag.name}'");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified parameters are in increasing order.");
                     return true;
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"Parameters are not in order for tag '{_Tag.name}'.");
-                    ErrorTags.Add(_Tag);
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Parameters are not in order.");
+                    _Tag.Errors.Add("Parameter order.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
-            catch (Exception EX_ParseParameters)
+            catch (Exception EX_CheckParameterOrder)
             {
-                WriteToLog(DebugLog, "error", $"Could not verify parameter order for tag '{_Tag.name}': {EX_ParseParameters}");
-                ErrorTags.Add(_Tag);
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify parameter order: {EX_CheckParameterOrder}");
+                _Tag.Errors.Add("Parameter order.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
         }
@@ -332,7 +352,24 @@ namespace ExcelConsoleAppBase
                     {
                         _Tag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(_Tag.MOP_RegisterValue));
                     }
-                    WriteToLog(DebugLog, "info", $"Successfully parsed parameters for tag '{_Tag.name}'");
+                    if (_Tag.LowClear_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(_Tag.LowClear_RegisterValue));
+                    }
+                    if (_Tag.HighClear_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(_Tag.HighClear_RegisterValue));
+                    }
+                    if (_Tag.Underrange_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(_Tag.Underrange_RegisterValue));
+                    }
+                    if (_Tag.Overrange_RegisterValue != string.Empty)
+                    {
+                        _Tag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(_Tag.Overrange_RegisterValue));
+                    }
+
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
 
                     return true;
                 }
@@ -358,17 +395,206 @@ namespace ExcelConsoleAppBase
                     {
                         _Tag.IntParameters.Add("MOP_RegisterValue", int.Parse(_Tag.MOP_RegisterValue));
                     }
-                    WriteToLog(DebugLog, "info", $"Successfully parsed parameters for tag '{_Tag.name}'");
+                    if (_Tag.LowClear_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("LowClear_RegisterValue", int.Parse(_Tag.LowClear_RegisterValue));
+                    }
+                    if (_Tag.HighClear_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("HighClear_RegisterValue", int.Parse(_Tag.HighClear_RegisterValue));
+                    }
+                    if (_Tag.Underrange_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("Underrange_RegisterValue", int.Parse(_Tag.Underrange_RegisterValue));
+                    }
+                    if (_Tag.Overrange_RegisterValue != string.Empty)
+                    {
+                        _Tag.IntParameters.Add("Overrange_RegisterValue", int.Parse(_Tag.Overrange_RegisterValue));
+                    }
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
 
                     return true;
                 }
+                _Tag.Errors.Add("Parameter format.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
             catch (Exception EX_ParseParameters)
             {
-                WriteToLog(DebugLog, "error", $"Could not parse parameters for tag '{_Tag.name}': {EX_ParseParameters}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not parse parameters: {EX_ParseParameters}");
+                _Tag.Errors.Add("Parameter format.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
+        }
+
+        public static bool CheckClearValue(Tag _Tag)
+        {
+            try
+            {
+                var result = false;
+                if (_Tag.DataType == "REAL")
+                {
+                    if (_Tag.DoubleParameters["LowClear_RegisterValue"] != _Tag.DoubleParameters["HighClear_RegisterValue"])
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
+                        _Tag.Errors.Add("Clear values.");
+                        if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                        return false;
+                    }
+                    if (!_Tag.DoubleParameters.ContainsKey("L_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No L parameter to verify Clear against.");
+                        return true;
+                    }
+                    var check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] > _Tag.DoubleParameters["L_RegisterValue"];
+                    var check2 = _Tag.DoubleParameters["LowClear_RegisterValue"] < _Tag.DoubleParameters["H_RegisterValue"];
+
+                    result = check1 && check2;
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (_Tag.IntParameters["LowClear_RegisterValue"] != _Tag.IntParameters["HighClear_RegisterValue"])
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
+                        _Tag.Errors.Add("Clear values.");
+                        if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                        return false;
+                    }
+                    if (!_Tag.DoubleParameters.ContainsKey("L_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No L parameter to verify Clear against.");
+                        return true;
+                    }
+                    var check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] > _Tag.DoubleParameters["L_RegisterValue"];
+                    var check2 = _Tag.DoubleParameters["LowClear_RegisterValue"] < _Tag.DoubleParameters["H_RegisterValue"];
+
+                    result = check1 && check2;
+                }
+                if (result)
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified Clear is between L and H.");
+                    return true;
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear is not between L and H.");
+                    _Tag.Errors.Add("Clear values.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                    return false;
+                }
+            }
+            catch (Exception EX_CheckClearValue)
+            {
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify clear value. {EX_CheckClearValue}");
+                _Tag.Errors.Add("Clear values.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                return false;
+            }
+        }
+
+        public static bool CheckUnderrange(Tag _Tag)
+        {
+            try
+            {
+                var result = false;
+                if (_Tag.DataType == "REAL")
+                {
+                    if (!_Tag.DoubleParameters.ContainsKey("LL_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter to verify Underrange against.");
+                        return true;
+                    }
+                    result = _Tag.DoubleParameters["Underrange_RegisterValue"] < _Tag.DoubleParameters["LL_RegisterValue"];
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (!_Tag.IntParameters.ContainsKey("LL_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter to verify Underrange against.");
+                        return true;
+                    }
+                    result = _Tag.IntParameters["Underrange_RegisterValue"] < _Tag.IntParameters["LL_RegisterValue"];
+                }
+                if (result)
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified Underrange is below LL.");
+                    return true;
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Underrange is not below LL.");
+                    _Tag.Errors.Add("Underrange.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                    return false;
+                }
+            }
+            catch (Exception EX_CheckUnderrange)
+            {
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify underrange value: {EX_CheckUnderrange}");
+                _Tag.Errors.Add("Underrange.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                return false;
+            }
+        }
+        public static bool CheckOverrange(Tag _Tag)
+        {
+            try
+            {
+                var result = false;
+                if (_Tag.DataType == "REAL")
+                {
+                    if (!_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No MOP parameter to verify Overrange against.");
+                        return true;
+                    }
+                    result = _Tag.DoubleParameters["Overrange_RegisterValue"] > _Tag.DoubleParameters["MOP_RegisterValue"];
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (!_Tag.IntParameters.ContainsKey("MOP_RegisterValue"))
+                    {
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No MOP parameter to verify Overrange against.");
+                        return true;
+                    }
+                    result = _Tag.IntParameters["Overrange_RegisterValue"] > _Tag.IntParameters["MOP_RegisterValue"];
+                }
+                if (result)
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified Overrange is above MOP.");
+                    return true;
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Overrange is not above MOP.");
+                    _Tag.Errors.Add("Overrange.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                    return false;
+                }
+            }
+            catch (Exception EX_CheckOverrange)
+            {
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify overrange value: {EX_CheckOverrange}");
+                _Tag.Errors.Add("Overrange.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                return false;
+            }
+        }
+
+        public static void DisplayErrorTags(List<Tag> _ErrorTags)
+        {
+            var displayString = $"{Environment.NewLine}The following tags should be checked:{Environment.NewLine}";
+            foreach (var et in _ErrorTags)
+            {
+                displayString += $"{et.name}:";
+                foreach (var e in et.Errors)
+                {
+                    displayString += $"{e} ";
+                }
+                displayString += $"{Environment.NewLine}";
+            }
+            WriteToLog(DebugLog, "info", displayString);
         }
     }
     public class Tag
@@ -398,5 +624,6 @@ namespace ExcelConsoleAppBase
 
         public Dictionary<string, int> IntParameters = new Dictionary<string, int>();
         public Dictionary<string, double> DoubleParameters = new Dictionary<string, double>();
+        public List<string> Errors = new List<string>();
     }
 }
