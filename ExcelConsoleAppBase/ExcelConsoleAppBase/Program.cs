@@ -24,7 +24,7 @@ namespace ExcelConsoleAppBase
         static void Main(string[] args)
         {
 #if DEBUG
-            //var fileName = "Foley_Rnch";
+            var fileName = "Foley_Rnch";
             //var fileName = "Livermore_Jct";
             //var fileName = "LRCV_419B";
             //var fileName = "Martinez_Sta";
@@ -32,7 +32,7 @@ namespace ExcelConsoleAppBase
             //var fileName = "Palm_Tract";
             //var fileName = "Tracy_Sta";
             //var fileName = "Vernalis_Meter";
-            var fileName = "Brentwood_PLC_2";
+            //var fileName = "Brentwood_PLC_2";
 #else
             string fileName = args[0].ToString();
 #endif
@@ -289,7 +289,7 @@ namespace ExcelConsoleAppBase
                 raw = raw.Replace("P/MIN", "");
                 //var m = Regex.Match(low, @"(\d+)");
                 char[] delims = { ' ', '/' };
-                char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F' };
+                char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V' };
                 char[] trims2 = { '-' };
                 char[] trims3 = { '0', '.' };
                 var splitRaw = raw.Split(delims);
@@ -317,82 +317,28 @@ namespace ExcelConsoleAppBase
                 _Tag.High_EURange = double.Parse(splitVals[3].TrimStart(trims2));
 
                 //Expected Results
-                if (_Tag.LL_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM","").TrimEnd(trims1)));
-                }
-                if (_Tag.L_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.H_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN","").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.HH_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.MOP_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.LowClear_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.HighClear_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.Underrange_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
-                if (_Tag.Overrange_ExpectedResult != string.Empty)
-                {
-                    _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                }
+                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
 
                 if (_Tag.DataType == "REAL")
                 {
                     //Register Values
-                    if (_Tag.LL_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("LL_RegisterValue", double.Parse(_Tag.LL_RegisterValue));
-                    }
-                    if (_Tag.L_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("L_RegisterValue", double.Parse(_Tag.L_RegisterValue));
-                    }
-                    if (_Tag.H_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("H_RegisterValue", double.Parse(_Tag.H_RegisterValue));
-                    }
-                    if (_Tag.HH_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("HH_RegisterValue", double.Parse(_Tag.HH_RegisterValue));
-                    }
-                    if (_Tag.MOP_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(_Tag.MOP_RegisterValue));
-                    }
-                    if (_Tag.LowClear_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(_Tag.LowClear_RegisterValue));
-                    }
-                    if (_Tag.HighClear_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(_Tag.HighClear_RegisterValue));
-                    }
-                    if (_Tag.Underrange_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(_Tag.Underrange_RegisterValue));
-                    }
-                    if (_Tag.Overrange_RegisterValue != string.Empty)
-                    {
-                        _Tag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(_Tag.Overrange_RegisterValue));
-                    }
+                    if (_Tag.LL_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("LL_RegisterValue", double.Parse(_Tag.LL_RegisterValue));
+                    if (_Tag.L_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("L_RegisterValue", double.Parse(_Tag.L_RegisterValue));
+                    if (_Tag.H_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("H_RegisterValue", double.Parse(_Tag.H_RegisterValue));
+                    if (_Tag.HH_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("HH_RegisterValue", double.Parse(_Tag.HH_RegisterValue));
+                    if (_Tag.MOP_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(_Tag.MOP_RegisterValue));
+                    if (_Tag.LowClear_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(_Tag.LowClear_RegisterValue));
+                    if (_Tag.HighClear_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(_Tag.HighClear_RegisterValue));
+                    if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(_Tag.Underrange_RegisterValue));
+                    if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(_Tag.Overrange_RegisterValue));
 
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
                     return true;
@@ -400,44 +346,17 @@ namespace ExcelConsoleAppBase
                 else if (_Tag.DataType == "INT")
                 {
                     //Register Values
-                    if (_Tag.LL_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("LL_RegisterValue", int.Parse(_Tag.LL_RegisterValue));
-                    }
-                    if (_Tag.L_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("L_RegisterValue", int.Parse(_Tag.L_RegisterValue));
-                    }
-                    if (_Tag.H_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("H_RegisterValue", int.Parse(_Tag.H_RegisterValue));
-                    }
-                    if (_Tag.HH_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("HH_RegisterValue", int.Parse(_Tag.HH_RegisterValue));
-                    }
-                    if (_Tag.MOP_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("MOP_RegisterValue", int.Parse(_Tag.MOP_RegisterValue));
-                    }
-                    if (_Tag.LowClear_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("LowClear_RegisterValue", int.Parse(_Tag.LowClear_RegisterValue));
-                    }
-                    if (_Tag.HighClear_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("HighClear_RegisterValue", int.Parse(_Tag.HighClear_RegisterValue));
-                    }
-                    if (_Tag.Underrange_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("Underrange_RegisterValue", int.Parse(_Tag.Underrange_RegisterValue));
-                    }
-                    if (_Tag.Overrange_RegisterValue != string.Empty)
-                    {
-                        _Tag.IntParameters.Add("Overrange_RegisterValue", int.Parse(_Tag.Overrange_RegisterValue));
-                    }
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
+                    if (_Tag.LL_RegisterValue != string.Empty) _Tag.IntParameters.Add("LL_RegisterValue", int.Parse(_Tag.LL_RegisterValue));
+                    if (_Tag.L_RegisterValue != string.Empty) _Tag.IntParameters.Add("L_RegisterValue", int.Parse(_Tag.L_RegisterValue));
+                    if (_Tag.H_RegisterValue != string.Empty) _Tag.IntParameters.Add("H_RegisterValue", int.Parse(_Tag.H_RegisterValue));
+                    if (_Tag.HH_RegisterValue != string.Empty) _Tag.IntParameters.Add("HH_RegisterValue", int.Parse(_Tag.HH_RegisterValue));
+                    if (_Tag.MOP_RegisterValue != string.Empty) _Tag.IntParameters.Add("MOP_RegisterValue", int.Parse(_Tag.MOP_RegisterValue));
+                    if (_Tag.LowClear_RegisterValue != string.Empty) _Tag.IntParameters.Add("LowClear_RegisterValue", int.Parse(_Tag.LowClear_RegisterValue));
+                    if (_Tag.HighClear_RegisterValue != string.Empty) _Tag.IntParameters.Add("HighClear_RegisterValue", int.Parse(_Tag.HighClear_RegisterValue));
+                    if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Underrange_RegisterValue", int.Parse(_Tag.Underrange_RegisterValue));
+                    if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Overrange_RegisterValue", int.Parse(_Tag.Overrange_RegisterValue));
 
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
                     return true;
                 }
                 _Tag.Errors.Add("Parameter format.");
@@ -635,6 +554,10 @@ namespace ExcelConsoleAppBase
                 var result = false;
                 if (_Tag.DataType == "REAL")
                 {
+                    if (!_Tag.DoubleParameters.ContainsKey("Overrange_RegisterValue"))
+                    {
+                        throw new Exception("Tag does not contain an Overrange Register Value.");
+                    }
                     if (!_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue"))
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: No MOP parameter to verify Overrange against.");
@@ -644,6 +567,11 @@ namespace ExcelConsoleAppBase
                 }
                 else if (_Tag.DataType == "INT")
                 {
+                    if (!_Tag.IntParameters.ContainsKey("Overrange_RegisterValue"))
+                    {
+                        throw new Exception("Tag does not contain an Overrange Register Value.");
+                    }
+
                     if (!_Tag.IntParameters.ContainsKey("MOP_RegisterValue"))
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: No MOP parameter to verify Overrange against.");
@@ -679,56 +607,178 @@ namespace ExcelConsoleAppBase
             try
             {
                 var result = false;
+                var factor = 0;
+                //equal
+                var equal = _Tag.Low_RegisterRange == _Tag.Low_EURange && _Tag.High_RegisterRange == _Tag.High_EURange;
+
+                //factor of 10
+                var registerOver10 = _Tag.Low_RegisterRange / 10 == _Tag.Low_EURange && _Tag.High_RegisterRange / 10 == _Tag.High_EURange;
+                var euOver10 = _Tag.Low_RegisterRange == _Tag.Low_EURange / 10 && _Tag.High_RegisterRange == _Tag.High_EURange / 10;
+                if (registerOver10 || euOver10) factor = 10;
+
+                //factor of 100
+                var registerOver100 = _Tag.Low_RegisterRange / 100 == _Tag.Low_EURange && _Tag.High_RegisterRange / 100 == _Tag.High_EURange;
+                var euOver100 = _Tag.Low_RegisterRange == _Tag.Low_EURange / 100 && _Tag.High_RegisterRange == _Tag.High_EURange / 100;
+                if (registerOver100 || euOver100) factor = 100;
+
+                //factor of 1000
+                var registerOver1000 = _Tag.Low_RegisterRange / 1000 == _Tag.Low_EURange && _Tag.High_RegisterRange / 1000 == _Tag.High_EURange;
+                var euOver1000 = _Tag.Low_RegisterRange == _Tag.Low_EURange / 1000 && _Tag.High_RegisterRange == _Tag.High_EURange / 1000;
+                if (registerOver1000 || euOver1000) factor = 1000;
+
+                if (!equal && !registerOver10 && !euOver10 && !registerOver100 && !euOver100 && !registerOver1000 && !euOver1000)
+                {
+                    result = true;
+                }
+
                 if (_Tag.DataType == "REAL")
                 {
-                    //equal
-                    if (_Tag.Low_RegisterRange == _Tag.Low_EURange)
+
+                    if (!result && equal)
                     {
-                        var check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] == _Tag.DoubleParameters["LowClear_ExpectedResult"];
-                        var check2 = _Tag.DoubleParameters["Underrange_RegisterValue"] == _Tag.DoubleParameters["Underrange_ExpectedResult"];
-                        var check3 = _Tag.DoubleParameters["Overrange_RegisterValue"] == _Tag.DoubleParameters["Overrange_ExpectedResult"];
-                        var check4 = _Tag.DoubleParameters["HighClear_RegisterValue"] == _Tag.DoubleParameters["HighClear_ExpectedResult"];
+                        var check1 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] == _Tag.DoubleParameters["LowClear_ExpectedResult"];
+                        var check2 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.DoubleParameters["Underrange_RegisterValue"] == _Tag.DoubleParameters["Underrange_ExpectedResult"];
+                        var check3 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.DoubleParameters["Overrange_RegisterValue"] == _Tag.DoubleParameters["Overrange_ExpectedResult"];
+                        var check4 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.DoubleParameters["HighClear_RegisterValue"] == _Tag.DoubleParameters["HighClear_ExpectedResult"];
                         var check5 = true;
-                        if (_Tag.DoubleParameters.ContainsKey("LL_RegisterValue"))
-                        {
-                            check5 = _Tag.DoubleParameters["LL_RegisterValue"] == _Tag.DoubleParameters["LL_ExpectedResult"];
-                        }
+                        if (_Tag.DoubleParameters.ContainsKey("`LL_RegisterValue")) check5 = _Tag.DoubleParameters["LL_RegisterValue"] == _Tag.DoubleParameters["LL_ExpectedResult"];
                         var check6 = true;
-                        if (_Tag.DoubleParameters.ContainsKey("L_RegisterValue"))
-                        {
-                            check6 = _Tag.DoubleParameters["L_RegisterValue"] == _Tag.DoubleParameters["L_ExpectedResult"];
-                        }
+                        if (_Tag.DoubleParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.DoubleParameters["L_RegisterValue"] == _Tag.DoubleParameters["L_ExpectedResult"];
                         var check7 = true;
-                        if (_Tag.DoubleParameters.ContainsKey("H_RegisterValue"))
-                        {
-                            check7 = _Tag.DoubleParameters["H_RegisterValue"] == _Tag.DoubleParameters["H_ExpectedResult"];
-                        }
+                        if (_Tag.DoubleParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.DoubleParameters["H_RegisterValue"] == _Tag.DoubleParameters["H_ExpectedResult"];
                         var check8 = true;
-                        if (_Tag.DoubleParameters.ContainsKey("HH_RegisterValue"))
-                        {
-                            check8 = _Tag.DoubleParameters["HH_RegisterValue"] == _Tag.DoubleParameters["HH_ExpectedResult"];
-                        }
+                        if (_Tag.DoubleParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.DoubleParameters["HH_RegisterValue"] == _Tag.DoubleParameters["HH_ExpectedResult"];
                         var check9 = true;
-                        if (_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue"))
-                        {
-                            check9 = _Tag.DoubleParameters["MOP_RegisterValue"] == _Tag.DoubleParameters["MOP_ExpectedResult"];
-                        }
+                        if (_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.DoubleParameters["MOP_RegisterValue"] == _Tag.DoubleParameters["MOP_ExpectedResult"];
+
                         result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
                     }
-                    //factor of 10
-                    else if (_Tag.Low_RegisterRange * 10 == _Tag.Low_EURange || _Tag.Low_RegisterRange == _Tag.Low_EURange * 10)
+                    else if (!result && (registerOver10 || registerOver100 || registerOver1000))
                     {
+                        var check1 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] / factor == _Tag.DoubleParameters["LowClear_ExpectedResult"];
+                        var check2 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.DoubleParameters["Underrange_RegisterValue"] / factor == _Tag.DoubleParameters["Underrange_ExpectedResult"];
+                        var check3 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.DoubleParameters["Overrange_RegisterValue"] / factor == _Tag.DoubleParameters["Overrange_ExpectedResult"];
+                        var check4 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.DoubleParameters["HighClear_RegisterValue"] / factor == _Tag.DoubleParameters["HighClear_ExpectedResult"];
+                        var check5 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("LL_RegisterValue")) check5 = _Tag.DoubleParameters["LL_RegisterValue"] / factor == _Tag.DoubleParameters["LL_ExpectedResult"];
+                        var check6 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.DoubleParameters["L_RegisterValue"] / factor == _Tag.DoubleParameters["L_ExpectedResult"];
+                        var check7 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.DoubleParameters["H_RegisterValue"] / factor == _Tag.DoubleParameters["H_ExpectedResult"];
+                        var check8 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.DoubleParameters["HH_RegisterValue"] / factor == _Tag.DoubleParameters["HH_ExpectedResult"];
+                        var check9 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.DoubleParameters["MOP_RegisterValue"] / factor == _Tag.DoubleParameters["MOP_ExpectedResult"];
 
+                        result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
                     }
-                    //factor of 100
-                    else if (_Tag.Low_RegisterRange * 100 == _Tag.Low_EURange || _Tag.Low_RegisterRange == _Tag.Low_EURange * 100)
+                    else if (!result && (euOver10 || euOver100 || euOver1000))
                     {
+                        var check1 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.DoubleParameters["LowClear_RegisterValue"] == _Tag.DoubleParameters["LowClear_ExpectedResult"] / factor;
+                        var check2 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.DoubleParameters["Underrange_RegisterValue"] == _Tag.DoubleParameters["Underrange_ExpectedResult"] / factor;
+                        var check3 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.DoubleParameters["Overrange_RegisterValue"] == _Tag.DoubleParameters["Overrange_ExpectedResult"] / factor;
+                        var check4 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.DoubleParameters["HighClear_RegisterValue"] == _Tag.DoubleParameters["HighClear_ExpectedResult"] / factor;
+                        var check5 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("LL_RegisterValue")) check5 = _Tag.DoubleParameters["LL_RegisterValue"] == _Tag.DoubleParameters["LL_ExpectedResult"] / factor;
+                        var check6 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.DoubleParameters["L_RegisterValue"] == _Tag.DoubleParameters["L_ExpectedResult"] / factor;
+                        var check7 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.DoubleParameters["H_RegisterValue"] == _Tag.DoubleParameters["H_ExpectedResult"] / factor;
+                        var check8 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.DoubleParameters["HH_RegisterValue"] == _Tag.DoubleParameters["HH_ExpectedResult"] / factor;
+                        var check9 = true;
+                        if (_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.DoubleParameters["MOP_RegisterValue"] == _Tag.DoubleParameters["MOP_ExpectedResult"] / factor;
 
+                        result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
+                    }
+                }
+                else if (_Tag.DataType == "INT")
+                {
+                    if (!result && equal)
+                    {
+                        var check1 = true;
+                        if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.IntParameters["LowClear_RegisterValue"] == _Tag.DoubleParameters["LowClear_ExpectedResult"];
+                        var check2 = true;
+                        if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.IntParameters["Underrange_RegisterValue"] == _Tag.DoubleParameters["Underrange_ExpectedResult"];
+                        var check3 = true;
+                        if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.IntParameters["Overrange_RegisterValue"] == _Tag.DoubleParameters["Overrange_ExpectedResult"];
+                        var check4 = true;
+                        if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.IntParameters["HighClear_RegisterValue"] == _Tag.DoubleParameters["HighClear_ExpectedResult"];
+                        var check5 = true;
+                        if (_Tag.IntParameters.ContainsKey("`LL_RegisterValue")) check5 = _Tag.IntParameters["LL_RegisterValue"] == _Tag.DoubleParameters["LL_ExpectedResult"];
+                        var check6 = true;
+                        if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.IntParameters["L_RegisterValue"] == _Tag.DoubleParameters["L_ExpectedResult"];
+                        var check7 = true;
+                        if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.IntParameters["H_RegisterValue"] == _Tag.DoubleParameters["H_ExpectedResult"];
+                        var check8 = true;
+                        if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.IntParameters["HH_RegisterValue"] == _Tag.DoubleParameters["HH_ExpectedResult"];
+                        var check9 = true;
+                        if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.IntParameters["MOP_RegisterValue"] == _Tag.DoubleParameters["MOP_ExpectedResult"];
+
+                        result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
+                    }
+                    else if (!result && (registerOver10 || registerOver100 || registerOver1000))
+                    {
+                        var check1 = true;
+                        if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = (double)_Tag.IntParameters["LowClear_RegisterValue"] / factor == _Tag.DoubleParameters["LowClear_ExpectedResult"];
+                        var check2 = true;
+                        if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = (double)_Tag.IntParameters["Underrange_RegisterValue"] / factor == _Tag.DoubleParameters["Underrange_ExpectedResult"];
+                        var check3 = true;
+                        if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = (double)_Tag.IntParameters["Overrange_RegisterValue"] / factor == _Tag.DoubleParameters["Overrange_ExpectedResult"];
+                        var check4 = true;
+                        if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = (double)_Tag.IntParameters["HighClear_RegisterValue"] / factor == _Tag.DoubleParameters["HighClear_ExpectedResult"];
+                        var check5 = true;
+                        if (_Tag.IntParameters.ContainsKey("LL_RegisterValue")) check5 = (double)_Tag.IntParameters["LL_RegisterValue"] / factor == _Tag.DoubleParameters["LL_ExpectedResult"];
+                        var check6 = true;
+                        if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = (double)_Tag.IntParameters["L_RegisterValue"] / factor == _Tag.DoubleParameters["L_ExpectedResult"];
+                        var check7 = true;
+                        if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = (double)_Tag.IntParameters["H_RegisterValue"] / factor == _Tag.DoubleParameters["H_ExpectedResult"];
+                        var check8 = true;
+                        if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = (double)_Tag.IntParameters["HH_RegisterValue"] / factor == _Tag.DoubleParameters["HH_ExpectedResult"];
+                        var check9 = true;
+                        if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = (double)_Tag.IntParameters["MOP_RegisterValue"] / factor == _Tag.DoubleParameters["MOP_ExpectedResult"];
+
+                        result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
+                    }
+                    else if (!result && (euOver10 || euOver100 || euOver1000))
+                    {
+                        var check1 = true;
+                        if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.IntParameters["LowClear_RegisterValue"] == _Tag.DoubleParameters["LowClear_ExpectedResult"] / factor;
+                        var check2 = true;
+                        if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.IntParameters["Underrange_RegisterValue"] == _Tag.DoubleParameters["Underrange_ExpectedResult"] / factor;
+                        var check3 = true;
+                        if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.IntParameters["Overrange_RegisterValue"] == _Tag.DoubleParameters["Overrange_ExpectedResult"] / factor;
+                        var check4 = true;
+                        if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.IntParameters["HighClear_RegisterValue"] == _Tag.DoubleParameters["HighClear_ExpectedResult"] / factor;
+                        var check5 = true;
+                        if (_Tag.IntParameters.ContainsKey("LL_RegisterValue")) check5 = _Tag.IntParameters["LL_RegisterValue"] == _Tag.DoubleParameters["LL_ExpectedResult"] / factor;
+                        var check6 = true;
+                        if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.IntParameters["L_RegisterValue"] == _Tag.DoubleParameters["L_ExpectedResult"] / factor;
+                        var check7 = true;
+                        if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.IntParameters["H_RegisterValue"] == _Tag.DoubleParameters["H_ExpectedResult"] / factor;
+                        var check8 = true;
+                        if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.IntParameters["HH_RegisterValue"] == _Tag.DoubleParameters["HH_ExpectedResult"] / factor;
+                        var check9 = true;
+                        if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.IntParameters["MOP_RegisterValue"] == _Tag.DoubleParameters["MOP_ExpectedResult"] / factor;
+
+                        result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
                     }
                 }
                 if (result)
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified linearity of values.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified linearity of values, or ranges are not linear.");
                     return true;
                 }
                 else
@@ -741,13 +791,13 @@ namespace ExcelConsoleAppBase
             }
             catch (Exception EX_CheckLinearity)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify overrange value: {EX_CheckLinearity}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify linearity: {EX_CheckLinearity}");
                 _Tag.Errors.Add("Linearity.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
-
         }
+
         public static void DisplayErrorTags(List<Tag> _ErrorTags)
         {
             var displayString = $"{Environment.NewLine}The following tags should be checked:{Environment.NewLine}";
