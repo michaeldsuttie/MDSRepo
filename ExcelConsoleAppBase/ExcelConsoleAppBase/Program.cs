@@ -24,7 +24,7 @@ namespace ExcelConsoleAppBase
         static void Main(string[] args)
         {
 #if DEBUG
-            var fileName = "Foley_Rnch";
+            //var fileName = "Foley_Rnch";
             //var fileName = "Livermore_Jct";
             //var fileName = "LRCV_419B";
             //var fileName = "Martinez_Sta";
@@ -33,6 +33,7 @@ namespace ExcelConsoleAppBase
             //var fileName = "Tracy_Sta";
             //var fileName = "Vernalis_Meter";
             //var fileName = "Brentwood_PLC_2";
+            var fileName = "Ruby_Intertie";
 #else
             string fileName = args[0].ToString();
 #endif
@@ -52,6 +53,10 @@ namespace ExcelConsoleAppBase
                 var underrangeValid = CheckUnderrange(record.Value);
                 var overrangeValid = CheckOverrange(record.Value);
                 var linearityValid = CheckLinearity(record.Value);
+                if (record.Value.DataType == "INT")
+                {
+                    var IntValueValid = CheckIntValue(record.Value);
+                }
             }
             DisplayErrorTags(ErrorTags);
 
@@ -286,10 +291,10 @@ namespace ExcelConsoleAppBase
             try
             {
                 var raw = _Tag.register_EURange;
-                raw = raw.Replace("P/MIN", "");
+                raw = raw.Replace("P/MIN", "").Replace("DT/HR", "").Replace("DT", "");
                 //var m = Regex.Match(low, @"(\d+)");
                 char[] delims = { ' ', '/' };
-                char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V' };
+                char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V', '#' };
                 char[] trims2 = { '-' };
                 char[] trims3 = { '0', '.' };
                 var splitRaw = raw.Split(delims);
@@ -317,15 +322,15 @@ namespace ExcelConsoleAppBase
                 _Tag.High_EURange = double.Parse(splitVals[3].TrimStart(trims2));
 
                 //Expected Results
-                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
-                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").TrimEnd(trims1)));
+                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
 
                 if (_Tag.DataType == "REAL")
                 {
@@ -434,6 +439,55 @@ namespace ExcelConsoleAppBase
             }
         }
 
+        public static bool CheckIntValue(Tag _Tag)
+        {
+            try
+            {
+                var result = false;
+                var num = 32767;
+
+                var check1 = true;
+                if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.IntParameters["LowClear_RegisterValue"] < num;
+                var check2 = true;
+                if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.IntParameters["Underrange_RegisterValue"] < num;
+                var check3 = true;
+                if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.IntParameters["Overrange_RegisterValue"] < num;
+                var check4 = true;
+                if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.IntParameters["HighClear_RegisterValue"] < num;
+                var check5 = true;
+                if (_Tag.IntParameters.ContainsKey("`LL_RegisterValue")) check5 = _Tag.IntParameters["LL_RegisterValue"] < num;
+                var check6 = true;
+                if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.IntParameters["L_RegisterValue"] < num;
+                var check7 = true;
+                if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.IntParameters["H_RegisterValue"] < num;
+                var check8 = true;
+                if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.IntParameters["HH_RegisterValue"] < num;
+                var check9 = true;
+                if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.IntParameters["MOP_RegisterValue"] < num;
+
+                result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
+                if (result)
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified Int values are less than {num}.");
+                    return true;
+                }
+                else
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Int Value >= {num}.");
+                    _Tag.Errors.Add($"Int Value >= {num}.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                    return false;
+                }
+            }
+            catch (Exception EX_CheckParameterOrder)
+            {
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify Int value: {EX_CheckParameterOrder}");
+                _Tag.Errors.Add("Could not verify Int value.");
+                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                return false;
+            }
+        }
+
         //Item2
         public static bool CheckClearValue(Tag _Tag)
         {
@@ -445,7 +499,7 @@ namespace ExcelConsoleAppBase
                     if (_Tag.DoubleParameters["LowClear_RegisterValue"] != _Tag.DoubleParameters["HighClear_RegisterValue"])
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
-                        _Tag.Errors.Add("Clear values.");
+                        _Tag.Errors.Add("Clear values do not match.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -464,7 +518,7 @@ namespace ExcelConsoleAppBase
                     if (_Tag.IntParameters["LowClear_RegisterValue"] != _Tag.IntParameters["HighClear_RegisterValue"])
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
-                        _Tag.Errors.Add("Clear values.");
+                        _Tag.Errors.Add("Clear values do not match.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -485,8 +539,8 @@ namespace ExcelConsoleAppBase
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear is not between L and H.");
-                    _Tag.Errors.Add("Clear values.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear Register Value is not between L and H.");
+                    _Tag.Errors.Add("Clear Register Value is not between L and H.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
@@ -494,7 +548,7 @@ namespace ExcelConsoleAppBase
             catch (Exception EX_CheckClearValue)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify clear value. {EX_CheckClearValue}");
-                _Tag.Errors.Add("Clear values.");
+                _Tag.Errors.Add("Could not verify clear value.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -531,8 +585,8 @@ namespace ExcelConsoleAppBase
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Underrange is not below LL.");
-                    _Tag.Errors.Add("Underrange.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Underrange Register Value is not below LL.");
+                    _Tag.Errors.Add("Underrange Register Value is not below LL.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
