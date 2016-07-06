@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 #if DEBUG
 
 #endif
-namespace ExcelConsoleAppBase
+namespace PGE_InputCheck
 {
 
     class Program
@@ -30,10 +30,10 @@ namespace ExcelConsoleAppBase
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
             ErrorTags = new List<Tag>();
 
-            WriteToLog(DebugLog, "info", $"PGE_InputCheck v{Assembly.GetExecutingAssembly().GetName().Version.ToString()}", false);
+            WriteToLog(DebugLog, "info", $"{Assembly.GetExecutingAssembly().FullName}", false);
 
 #if DEBUG
-            var fileName = "Foley_Rnch";
+            //var fileName = "Foley_Rnch";
             //var fileName = "Livermore_Jct";
             //var fileName = "LRCV_419B";
             //var fileName = "Martinez_Sta";
@@ -43,18 +43,29 @@ namespace ExcelConsoleAppBase
             //var fileName = "Vernalis_Meter";
             //var fileName = "Brentwood_PLC_2";
             //var fileName = "Ruby_Intertie";
-            //test
+            var fileName = "Lodi_Field";
+            //var fileName = "Wild_Goose_Grdly";
 #else
+            if (args.Length == 0)
+            {
+                WriteToLog(DebugLog, "error", $"Please supply a file name without the file extension.", false);
+                ExitApp();
+            }
             string fileName = args[0].ToString();
+            string workingDirectory = $@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\";
+            string filePath = $@"{workingDirectory}{fileName}.csv";
+            if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
+            if (!File.Exists(filePath))
+            {
+                WriteToLog(DebugLog, "error", $@"File not found in '{workingDirectory}'. Check spelling and file location. Name should not include file extension.", false);
+                ExitApp();
+            }
 #endif
 
-
-
-            var csvContent = parseCSV($"{AppDomain.CurrentDomain.BaseDirectory}{fileName}.csv");
+            var csvContent = parseCSV($@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\{fileName}.csv");
 
             foreach (var record in csvContent)
             {
-                //WriteToLog(DebugLog, "info", $"name: {record.Value.name} | register_EURange: {record.Value.register_EURange} | DataType: {record.Value.DataType} | LowClear_RegisterValue: {record.Value.LowClear_RegisterValue} | LowClear_ExpectedResult: {record.Value.LowClear_ExpectedResult} | Underrange_RegisterValue: {record.Value.Underrange_RegisterValue} | Underrange_ExpectedResult: {record.Value.Underrange_ExpectedResult} | Overrange_RegisterValue: {record.Value.Overrange_RegisterValue} | Overrange_ExpectedResult: {record.Value.Overrange_ExpectedResult} | LL_RegisterValue: {record.Value.LL_RegisterValue} | LL_ExpectedResult: {record.Value.LL_ExpectedResult} | L_RegisterValue: {record.Value.L_RegisterValue} | L_ExpectedResult: {record.Value.L_ExpectedResult} | H_RegisterValue: {record.Value.H_RegisterValue} | H_ExpectedResult: {record.Value.H_ExpectedResult} | HH_RegisterValue: {record.Value.HH_RegisterValue} | HH_ExpectedResult: {record.Value.HH_ExpectedResult} | MOP_RegisterValue: {record.Value.MOP_RegisterValue} | MOP_ExpectedResult: {record.Value.MOP_ExpectedResult} | HighClear_RegisterValue: {record.Value.HighClear_RegisterValue} | HighClear_ExpectedResult: {record.Value.HighClear_ExpectedResult}");
                 var parametersValid = ParseParameters(record.Value);
                 if (ErrorTags.Contains(record.Value)) continue;
                 var progressionValid = CheckValueProgression(record.Value);
@@ -68,7 +79,6 @@ namespace ExcelConsoleAppBase
                 }
             }
             DisplayErrorTags(ErrorTags);
-
             ExitApp();
         }
 
@@ -123,7 +133,6 @@ namespace ExcelConsoleAppBase
                 {
                     string line;
                     int rowIndex = 0;
-                    //Headers = new List<string>();
                     PreviousTag = new Tag();
                     var CSVContent = new Dictionary<string, Tag>();
                     var templist = new List<string>();
@@ -136,17 +145,6 @@ namespace ExcelConsoleAppBase
                             rowIndex++;
                             continue;
                         }
-                        //if (row[0] == "Process Value (PV) Description")
-                        //{
-                        //    var headerString = "Headers: ";
-                        //    foreach (var h in row)
-                        //    {
-                        //        Headers.Add(h);
-                        //        headerString += $"{h},";
-                        //    }
-                        //    headerString = headerString.Remove(headerString.Length - 1, 1);
-                        //    WriteToLog(DebugLog, "info", headerString);
-                        //}
                         if (CSVContent.ContainsKey((row[1] == string.Empty ? PreviousTag.name : row[1])))
                         {
                             var record = CSVContent.Where(x => x.Key == PreviousTag.name).FirstOrDefault();
@@ -159,31 +157,24 @@ namespace ExcelConsoleAppBase
                                         {
                                             case "Underrange-6%":
                                                 record.Value.Underrange_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     Underrange_RegisterValue: {row[i]}");
                                                 break;
                                             case "LL":
                                                 record.Value.LL_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     LL_RegisterValue: {row[i]}");
                                                 break;
                                             case "L":
                                                 record.Value.L_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     L_RegisterValue: {row[i]}");
                                                 break;
                                             case "H":
                                                 record.Value.H_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     H_RegisterValue: {row[i]}");
                                                 break;
                                             case "HH":
                                                 record.Value.HH_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     HH_RegisterValue: {row[i]}");
                                                 break;
                                             case "MOP":
                                                 record.Value.MOP_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     MOP_RegisterValue: {row[i]}");
                                                 break;
                                             case "Clear":
                                                 record.Value.HighClear_RegisterValue = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     HighClear_RegisterValue: {row[i]}");
                                                 break;
                                             case "Overrange-6%":
                                                 record.Value.Overrange_RegisterValue = row[i];
@@ -195,31 +186,24 @@ namespace ExcelConsoleAppBase
                                         {
                                             case "Underrange-6%":
                                                 record.Value.Underrange_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     Underrange_ExpectedResult: {row[i]}");
                                                 break;
                                             case "LL":
                                                 record.Value.LL_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     LL_ExpectedResult: {row[i]}");
                                                 break;
                                             case "L":
                                                 record.Value.L_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     L_ExpectedResult: {row[i]}");
                                                 break;
                                             case "H":
                                                 record.Value.H_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     H_ExpectedResult: {row[i]}");
                                                 break;
                                             case "HH":
                                                 record.Value.HH_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     HH_ExpectedResult: {row[i]}");
                                                 break;
                                             case "MOP":
                                                 record.Value.MOP_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     MOP_ExpectedResult: {row[i]}");
                                                 break;
                                             case "Clear":
                                                 record.Value.HighClear_ExpectedResult = row[i];
-                                                //WriteToLog(DebugLog, "info", $"     HighClear_ExpectedResult: {row[i]}");
                                                 break;
                                             case "Overrange-6%":
                                                 record.Value.Overrange_ExpectedResult = row[i];
@@ -243,27 +227,18 @@ namespace ExcelConsoleAppBase
                                     case 1:
                                         tempRecord.name = row[i];
                                         PreviousTag.name = row[i];
-                                        //WriteToLog(DebugLog, "info", $"{Environment.NewLine}     name: {row[i]}");
                                         break;
                                     case 2:
                                         tempRecord.register_EURange = row[i];
-                                        //PreviousTag.register_EURange = row[i];
-                                        //WriteToLog(DebugLog, "info", $"     register_EURange: {row[i]}");
                                         break;
                                     case 4:
                                         tempRecord.DataType = row[i];
-                                        //PreviousTag.DataType = row[i];
-                                        //WriteToLog(DebugLog, "info", $"     DataType: {row[i]}");
                                         break;
                                     case 6:
                                         tempRecord.LowClear_RegisterValue = row[i];
-                                        //PreviousTag.LowClear_RegisterValue = row[i];
-                                        //WriteToLog(DebugLog, "info", $"     LowClear_RegisterValue: {row[i]}");
                                         break;
                                     case 7:
                                         tempRecord.LowClear_ExpectedResult = row[i];
-                                        //PreviousTag.LowClear_ExpectedResult = row[i];
-                                        //WriteToLog(DebugLog, "info", $"     LowClear_ExpectedResult: {row[i]}");
                                         break;
                                 }
                             }
@@ -276,7 +251,7 @@ namespace ExcelConsoleAppBase
 
                         rowIndex++;
                     }
-                    WriteToLog(DebugLog, "info", $"Sucessfully parsed CSV @ '{_path}'. {CSVContent.Count} Tags added.", false);
+                    WriteToLog(DebugLog, "info", $"Sucessfully parsed CSV into program: '{_path}'. {CSVContent.Count} Tags added.", false);
                     return CSVContent;
                 }
             }
@@ -284,7 +259,7 @@ namespace ExcelConsoleAppBase
             {
                 if (EX_ParseCSV.HResult == -2147024864)
                 {
-                    WriteToLog(DebugLog, "error", $"Could not parse CSV. Please close file and try again.");
+                    WriteToLog(DebugLog, "error", $"Could not parse CSV. Please close file and try again.", false);
                     ExitApp();
                 }
                 else
@@ -300,46 +275,87 @@ namespace ExcelConsoleAppBase
             try
             {
                 var raw = _Tag.register_EURange;
-                raw = raw.Replace("P/MIN", "").Replace("DT/HR", "").Replace("DT", "");
-                //var m = Regex.Match(low, @"(\d+)");
-                char[] delims = { ' ', '/' };
-                char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V', '#' };
-                char[] trims2 = { '-' };
-                char[] trims3 = { '0', '.' };
-                var splitRaw = raw.Split(delims);
-                var splitVals = new List<string>();
-                foreach (var s in splitRaw)
+                var regexPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
+
+                var rawRangeMatches = Regex.Matches(raw, regexPattern);
+                var rawRangeMatchesList = new List<string>();
+                var parsedRangeMatches = new List<double>();
+                foreach (var m in rawRangeMatches)
                 {
-                    var tempS = s.Trim(trims1);
-                    if (tempS == string.Empty) continue;
-                    tempS = tempS.TrimEnd(trims2);
-                    if (tempS == "0" || tempS == "0.00")
+                    rawRangeMatchesList.Add(m.ToString());
+                }
+                for (int c = 0; c < rawRangeMatchesList.Count; c++)
+                {
+                    if (rawRangeMatchesList[c].ToString().EndsWith("."))
                     {
-                        tempS = "0";
-                        splitVals.Add(tempS);
-                        continue;
+                        var nextMatch = rawRangeMatchesList[c + 1];
+                        var val = rawRangeMatchesList[c].ToString() + nextMatch.ToString();
+                        if (val.StartsWith("-") && !(c % 2 == 0)) val = val.Replace("-", "");
+                        parsedRangeMatches.Add(double.Parse(val.ToString()));
+                        rawRangeMatchesList.RemoveAt(c + 1);
                     }
                     else
                     {
-                        //tempS = tempS.Trim(trims3);
-                        splitVals.Add(tempS);
+                        if (rawRangeMatchesList[c].StartsWith("-") && !(c % 2 == 0)) rawRangeMatchesList[c] = rawRangeMatchesList[c].Replace("-", "");
+                        parsedRangeMatches.Add(double.Parse(rawRangeMatchesList[c].ToString()));
                     }
                 }
-                _Tag.Low_RegisterRange = double.Parse(splitVals[0]);
-                _Tag.High_RegisterRange = double.Parse(splitVals[1].TrimStart(trims2));
-                _Tag.Low_EURange = double.Parse(splitVals[2]);
-                _Tag.High_EURange = double.Parse(splitVals[3].TrimStart(trims2));
+
+
+                //raw = raw.Replace("P /MIN", "").Replace("DT/HR", "").Replace("DT", "");
+                //char[] delims = { ' ', '/' };
+                //char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V', '#' };
+                //char[] trims2 = { '-' };
+                //char[] trims3 = { '0', '.' };
+                //var splitRaw = raw.Split(delims);
+                //var splitVals = new List<string>();
+                //foreach (var s in splitRaw)
+                //{
+                //    var tempS = s.Trim(trims1);
+                //    if (tempS == string.Empty) continue;
+                //    tempS = tempS.TrimEnd(trims2);
+                //    if (tempS == "0" || tempS == "0.00")
+                //    {
+                //        tempS = "0";
+                //        splitVals.Add(tempS);
+                //        continue;
+                //    }
+                //    else
+                //    {
+                //        //tempS = tempS.Trim(trims3);
+                //        splitVals.Add(tempS);
+                //    }
+                //}
+                //_Tag.Low_RegisterRange = double.Parse(splitVals[0]);
+                //_Tag.High_RegisterRange = double.Parse(splitVals[1].TrimStart(trims2));
+                //_Tag.Low_EURange = double.Parse(splitVals[2]);
+                //_Tag.High_EURange = double.Parse(splitVals[3].TrimStart(trims2));
+
+                _Tag.Low_RegisterRange = parsedRangeMatches[0];
+                _Tag.High_RegisterRange = parsedRangeMatches[1];
+                _Tag.Low_EURange = parsedRangeMatches[2];
+                _Tag.High_EURange = parsedRangeMatches[3];
 
                 //Expected Results
-                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+                //if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
+
+                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(_Tag.LL_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(_Tag.L_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(_Tag.H_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(_Tag.HH_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(_Tag.MOP_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(_Tag.LowClear_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(_Tag.HighClear_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(_Tag.Underrange_ExpectedResult, regexPattern).ToString()));
+                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(_Tag.Overrange_ExpectedResult, regexPattern).ToString()));
 
                 if (_Tag.DataType == "REAL")
                 {
@@ -354,7 +370,7 @@ namespace ExcelConsoleAppBase
                     if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(_Tag.Underrange_RegisterValue));
                     if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(_Tag.Overrange_RegisterValue));
 
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed 'Register/EU Range', 'Register Values', 'Expected Results'.");
                     return true;
                 }
                 else if (_Tag.DataType == "INT")
@@ -370,7 +386,7 @@ namespace ExcelConsoleAppBase
                     if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Underrange_RegisterValue", int.Parse(_Tag.Underrange_RegisterValue));
                     if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Overrange_RegisterValue", int.Parse(_Tag.Overrange_RegisterValue));
 
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed parameters.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed 'Register/EU Range', 'Register Values' and 'Expected Results'.");
                     return true;
                 }
                 _Tag.Errors.Add("Parameter format.");
@@ -379,8 +395,8 @@ namespace ExcelConsoleAppBase
             }
             catch (Exception EX_ParseParameters)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not parse parameters: {EX_ParseParameters}");
-                _Tag.Errors.Add("Parameter format.");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not parse 'Register/EU Range', 'Register Values' and/or 'Expected Results': {EX_ParseParameters}");
+                _Tag.Errors.Add("CSV Parameter format.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -396,7 +412,7 @@ namespace ExcelConsoleAppBase
                 {
                     if (!_Tag.DoubleParameters.ContainsKey("LL_RegisterValue"))
                     {
-                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing order.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing 'Register Value' order.");
                         return true;
                     }
                     var check1 = _Tag.DoubleParameters["LL_RegisterValue"] < _Tag.DoubleParameters["L_RegisterValue"];
@@ -413,7 +429,7 @@ namespace ExcelConsoleAppBase
                 {
                     if (!_Tag.IntParameters.ContainsKey("LL_RegisterValue"))
                     {
-                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing order.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: No LL parameter. Cannot verify increasing 'Register Value' order.");
                         return true;
                     }
                     var check1 = _Tag.IntParameters["LL_RegisterValue"] < _Tag.IntParameters["L_RegisterValue"];
@@ -428,21 +444,21 @@ namespace ExcelConsoleAppBase
                 }
                 if (result)
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified parameters are in increasing order.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully verified 'Register Value' parameters are in increasing order.");
                     return true;
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Parameters are not in order.");
-                    _Tag.Errors.Add("Parameter order.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: 'Register Value' parameters are not in order.");
+                    _Tag.Errors.Add("'Register Value' parameter order.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckParameterOrder)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify parameter order: {EX_CheckParameterOrder}");
-                _Tag.Errors.Add("Parameter order.");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify 'Register Value' parameter order: {EX_CheckParameterOrder}");
+                _Tag.Errors.Add("'Register Value' parameter order.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -507,8 +523,8 @@ namespace ExcelConsoleAppBase
                 {
                     if (_Tag.DoubleParameters["LowClear_RegisterValue"] != _Tag.DoubleParameters["HighClear_RegisterValue"])
                     {
-                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
-                        _Tag.Errors.Add("Clear values do not match.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values are not equal.");
+                        _Tag.Errors.Add("Clear values are not equal.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -526,8 +542,8 @@ namespace ExcelConsoleAppBase
                 {
                     if (_Tag.IntParameters["LowClear_RegisterValue"] != _Tag.IntParameters["HighClear_RegisterValue"])
                     {
-                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values do not match.");
-                        _Tag.Errors.Add("Clear values do not match.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values are not equal.");
+                        _Tag.Errors.Add("Clear values are not equal.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -603,7 +619,7 @@ namespace ExcelConsoleAppBase
             catch (Exception EX_CheckUnderrange)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify underrange value: {EX_CheckUnderrange}");
-                _Tag.Errors.Add("Underrange.");
+                _Tag.Errors.Add("Could not verify underrange value.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -650,7 +666,7 @@ namespace ExcelConsoleAppBase
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Overrange is not above MOP.");
-                    _Tag.Errors.Add("Overrange.");
+                    _Tag.Errors.Add("Overrange is not above MOP.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
@@ -658,7 +674,7 @@ namespace ExcelConsoleAppBase
             catch (Exception EX_CheckOverrange)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify overrange value: {EX_CheckOverrange}");
-                _Tag.Errors.Add("Overrange.");
+                _Tag.Errors.Add("Could not verify overrange value.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -846,8 +862,8 @@ namespace ExcelConsoleAppBase
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Values are not linear.");
-                    _Tag.Errors.Add("Linearity.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: 'Register Value' and 'Expected Result' values are not linear.");
+                    _Tag.Errors.Add("'Register Value' and 'Expected Result' values are not linear.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
@@ -855,7 +871,7 @@ namespace ExcelConsoleAppBase
             catch (Exception EX_CheckLinearity)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify linearity: {EX_CheckLinearity}");
-                _Tag.Errors.Add("Linearity.");
+                _Tag.Errors.Add("Could not verify linearity of 'Register Value' and 'Expected Result' values.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
