@@ -43,8 +43,13 @@ namespace PGE_InputCheck
             //var fileName = "Vernalis_Meter";
             //var fileName = "Brentwood_PLC_2";
             //var fileName = "Ruby_Intertie";
-            var fileName = "Lodi_Field";
+            //var fileName = "Lodi_Field";
             //var fileName = "Wild_Goose_Grdly";
+            var fileName = "Panoche";
+
+            string workingDirectory = $@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\";
+            if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
+
 #else
             if (args.Length == 0)
             {
@@ -52,9 +57,6 @@ namespace PGE_InputCheck
                 ExitApp();
             }
             string fileName = args[0].ToString();
-            string workingDirectory = $@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\";
-            string filePath = $@"{workingDirectory}{fileName}.csv";
-            if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
             if (!File.Exists(filePath))
             {
                 WriteToLog(DebugLog, "error", $@"File not found in '{workingDirectory}'. Check spelling and file location. Name should not include file extension.", false);
@@ -158,6 +160,9 @@ namespace PGE_InputCheck
                                             case "Underrange-6%":
                                                 record.Value.Underrange_RegisterValue = row[i];
                                                 break;
+                                            case "Underrange":
+                                                record.Value.Underrange_RegisterValue = row[i];
+                                                break;
                                             case "LL":
                                                 record.Value.LL_RegisterValue = row[i];
                                                 break;
@@ -179,12 +184,18 @@ namespace PGE_InputCheck
                                             case "Overrange-6%":
                                                 record.Value.Overrange_RegisterValue = row[i];
                                                 break;
+                                            case "Overrange":
+                                                record.Value.Overrange_RegisterValue = row[i];
+                                                break;
                                         }
                                         break;
                                     case 7:
                                         switch (row[8])
                                         {
                                             case "Underrange-6%":
+                                                record.Value.Underrange_ExpectedResult = row[i];
+                                                break;
+                                            case "Underrange":
                                                 record.Value.Underrange_ExpectedResult = row[i];
                                                 break;
                                             case "LL":
@@ -206,6 +217,9 @@ namespace PGE_InputCheck
                                                 record.Value.HighClear_ExpectedResult = row[i];
                                                 break;
                                             case "Overrange-6%":
+                                                record.Value.Overrange_ExpectedResult = row[i];
+                                                break;
+                                            case "Overrange":
                                                 record.Value.Overrange_ExpectedResult = row[i];
                                                 break;
                                         }
@@ -264,7 +278,7 @@ namespace PGE_InputCheck
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "error", $"Could not parse CSV: {EX_ParseCSV}");
+                    WriteToLog(DebugLog, "error", $"EX_ParseCSV: {EX_ParseCSV}");
                 }
                 return null;
             }
@@ -396,7 +410,7 @@ namespace PGE_InputCheck
             catch (Exception EX_ParseParameters)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not parse 'Register/EU Range', 'Register Values' and/or 'Expected Results': {EX_ParseParameters}");
-                _Tag.Errors.Add("CSV Parameter format.");
+                _Tag.Errors.Add("EX_ParseParameters.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -458,7 +472,7 @@ namespace PGE_InputCheck
             catch (Exception EX_CheckParameterOrder)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify 'Register Value' parameter order: {EX_CheckParameterOrder}");
-                _Tag.Errors.Add("'Register Value' parameter order.");
+                _Tag.Errors.Add("EX_CheckParameterOrder.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -504,10 +518,10 @@ namespace PGE_InputCheck
                     return false;
                 }
             }
-            catch (Exception EX_CheckParameterOrder)
+            catch (Exception EX_CheckIntValue)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify Int value: {EX_CheckParameterOrder}");
-                _Tag.Errors.Add("Could not verify Int value.");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify Int value: {EX_CheckIntValue}");
+                _Tag.Errors.Add("EX_CheckIntValue.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -573,7 +587,7 @@ namespace PGE_InputCheck
             catch (Exception EX_CheckClearValue)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify clear value. {EX_CheckClearValue}");
-                _Tag.Errors.Add("Could not verify clear value.");
+                _Tag.Errors.Add("EX_CheckClearValue.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -619,7 +633,7 @@ namespace PGE_InputCheck
             catch (Exception EX_CheckUnderrange)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify underrange value: {EX_CheckUnderrange}");
-                _Tag.Errors.Add("Could not verify underrange value.");
+                _Tag.Errors.Add("EX_CheckUnderrange.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -674,7 +688,7 @@ namespace PGE_InputCheck
             catch (Exception EX_CheckOverrange)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify overrange value: {EX_CheckOverrange}");
-                _Tag.Errors.Add("Could not verify overrange value.");
+                _Tag.Errors.Add("EX_CheckOverrange.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
@@ -871,7 +885,7 @@ namespace PGE_InputCheck
             catch (Exception EX_CheckLinearity)
             {
                 WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify linearity: {EX_CheckLinearity}");
-                _Tag.Errors.Add("Could not verify linearity of 'Register Value' and 'Expected Result' values.");
+                _Tag.Errors.Add("EX_CheckLinearity.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
             }
