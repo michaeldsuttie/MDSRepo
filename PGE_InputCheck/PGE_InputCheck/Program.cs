@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-[assembly: AssemblyVersion("1.2.*")]
+[assembly: AssemblyVersion("1.3.*")]
 
 #if DEBUG
 
