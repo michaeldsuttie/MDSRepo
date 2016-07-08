@@ -45,7 +45,8 @@ namespace PGE_InputCheck
             //var fileName = "Ruby_Intertie";
             //var fileName = "Lodi_Field";
             //var fileName = "Wild_Goose_Grdly";
-            var fileName = "Panoche";
+            var fileName = "Panoche.csv";
+            string filePath = $"{AppDomain.CurrentDomain.BaseDirectory}{fileName}";
 
             string workingDirectory = $@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\";
             if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
@@ -56,15 +57,16 @@ namespace PGE_InputCheck
                 WriteToLog(DebugLog, "error", $"Please supply a file name without the file extension.", false);
                 ExitApp();
             }
-            string fileName = args[0].ToString();
+
+            string filePath = $"{AppDomain.CurrentDomain.BaseDirectory}{args[0].ToString()}";
             if (!File.Exists(filePath))
             {
-                WriteToLog(DebugLog, "error", $@"File not found in '{workingDirectory}'. Check spelling and file location. Name should not include file extension.", false);
+                WriteToLog(DebugLog, "error", $@"'{args[0].ToString()}' not found in '{AppDomain.CurrentDomain.BaseDirectory}'. Check spelling and file location.", false);
                 ExitApp();
             }
 #endif
 
-            var csvContent = parseCSV($@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\{fileName}.csv");
+            var csvContent = parseCSV(filePath);
 
             foreach (var record in csvContent)
             {
@@ -290,76 +292,37 @@ namespace PGE_InputCheck
             {
                 var raw = _Tag.register_EURange;
                 var regexPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
-
                 var rawRangeMatches = Regex.Matches(raw, regexPattern);
                 var rawRangeMatchesList = new List<string>();
                 var parsedRangeMatches = new List<double>();
-                foreach (var m in rawRangeMatches)
+
+                if (Regex.Matches(raw, "['/']").Count != 0)
                 {
-                    rawRangeMatchesList.Add(m.ToString());
-                }
-                for (int c = 0; c < rawRangeMatchesList.Count; c++)
-                {
-                    if (rawRangeMatchesList[c].ToString().EndsWith("."))
+                    foreach (var m in rawRangeMatches)
                     {
-                        var nextMatch = rawRangeMatchesList[c + 1];
-                        var val = rawRangeMatchesList[c].ToString() + nextMatch.ToString();
-                        if (val.StartsWith("-") && !(c % 2 == 0)) val = val.Replace("-", "");
-                        parsedRangeMatches.Add(double.Parse(val.ToString()));
-                        rawRangeMatchesList.RemoveAt(c + 1);
+                        rawRangeMatchesList.Add(m.ToString());
                     }
-                    else
+                    for (int c = 0; c < rawRangeMatchesList.Count; c++)
                     {
-                        if (rawRangeMatchesList[c].StartsWith("-") && !(c % 2 == 0)) rawRangeMatchesList[c] = rawRangeMatchesList[c].Replace("-", "");
-                        parsedRangeMatches.Add(double.Parse(rawRangeMatchesList[c].ToString()));
+                        if (rawRangeMatchesList[c].ToString().EndsWith("."))
+                        {
+                            var nextMatch = rawRangeMatchesList[c + 1];
+                            var val = rawRangeMatchesList[c].ToString() + nextMatch.ToString();
+                            if (val.StartsWith("-") && !(c % 2 == 0)) val = val.Replace("-", "");
+                            parsedRangeMatches.Add(double.Parse(val.ToString()));
+                            rawRangeMatchesList.RemoveAt(c + 1);
+                        }
+                        else
+                        {
+                            if (rawRangeMatchesList[c].StartsWith("-") && !(c % 2 == 0)) rawRangeMatchesList[c] = rawRangeMatchesList[c].Replace("-", "");
+                            parsedRangeMatches.Add(double.Parse(rawRangeMatchesList[c].ToString()));
+                        }
                     }
+                    _Tag.Low_RegisterRange = parsedRangeMatches[0];
+                    _Tag.High_RegisterRange = parsedRangeMatches[1];
+                    _Tag.Low_EURange = parsedRangeMatches[2];
+                    _Tag.High_EURange = parsedRangeMatches[3];
                 }
-
-
-                //raw = raw.Replace("P /MIN", "").Replace("DT/HR", "").Replace("DT", "");
-                //char[] delims = { ' ', '/' };
-                //char[] trims1 = { ' ', '%', 'U', 'M', 'I', 'P', 'N', 'F', 'V', '#' };
-                //char[] trims2 = { '-' };
-                //char[] trims3 = { '0', '.' };
-                //var splitRaw = raw.Split(delims);
-                //var splitVals = new List<string>();
-                //foreach (var s in splitRaw)
-                //{
-                //    var tempS = s.Trim(trims1);
-                //    if (tempS == string.Empty) continue;
-                //    tempS = tempS.TrimEnd(trims2);
-                //    if (tempS == "0" || tempS == "0.00")
-                //    {
-                //        tempS = "0";
-                //        splitVals.Add(tempS);
-                //        continue;
-                //    }
-                //    else
-                //    {
-                //        //tempS = tempS.Trim(trims3);
-                //        splitVals.Add(tempS);
-                //    }
-                //}
-                //_Tag.Low_RegisterRange = double.Parse(splitVals[0]);
-                //_Tag.High_RegisterRange = double.Parse(splitVals[1].TrimStart(trims2));
-                //_Tag.Low_EURange = double.Parse(splitVals[2]);
-                //_Tag.High_EURange = double.Parse(splitVals[3].TrimStart(trims2));
-
-                _Tag.Low_RegisterRange = parsedRangeMatches[0];
-                _Tag.High_RegisterRange = parsedRangeMatches[1];
-                _Tag.Low_EURange = parsedRangeMatches[2];
-                _Tag.High_EURange = parsedRangeMatches[3];
-
-                //Expected Results
-                //if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(_Tag.LL_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(_Tag.L_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(_Tag.H_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(_Tag.HH_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(_Tag.MOP_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(_Tag.LowClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(_Tag.HighClear_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(_Tag.Underrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
-                //if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(_Tag.Overrange_ExpectedResult.Replace("P/MIN", "").Replace(":00 PM", "").Replace("DT/HR", "").Replace("DT", "").TrimEnd(trims1)));
 
                 if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(_Tag.LL_ExpectedResult, regexPattern).ToString()));
                 if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(_Tag.L_ExpectedResult, regexPattern).ToString()));
@@ -409,7 +372,7 @@ namespace PGE_InputCheck
             }
             catch (Exception EX_ParseParameters)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not parse 'Register/EU Range', 'Register Values' and/or 'Expected Results': {EX_ParseParameters}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_ParseParameters: {EX_ParseParameters}");
                 _Tag.Errors.Add("EX_ParseParameters.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -464,14 +427,14 @@ namespace PGE_InputCheck
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: 'Register Value' parameters are not in order.");
-                    _Tag.Errors.Add("'Register Value' parameter order.");
+                    _Tag.Errors.Add("Parameter order.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckParameterOrder)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify 'Register Value' parameter order: {EX_CheckParameterOrder}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckParameterOrder: {EX_CheckParameterOrder}");
                 _Tag.Errors.Add("EX_CheckParameterOrder.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -513,14 +476,14 @@ namespace PGE_InputCheck
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Int Value >= {num}.");
-                    _Tag.Errors.Add($"Int Value >= {num}.");
+                    _Tag.Errors.Add($"Int Value.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckIntValue)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify Int value: {EX_CheckIntValue}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckIntValue: {EX_CheckIntValue}");
                 _Tag.Errors.Add("EX_CheckIntValue.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -538,7 +501,7 @@ namespace PGE_InputCheck
                     if (_Tag.DoubleParameters["LowClear_RegisterValue"] != _Tag.DoubleParameters["HighClear_RegisterValue"])
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values are not equal.");
-                        _Tag.Errors.Add("Clear values are not equal.");
+                        _Tag.Errors.Add("Clear.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -557,7 +520,7 @@ namespace PGE_InputCheck
                     if (_Tag.IntParameters["LowClear_RegisterValue"] != _Tag.IntParameters["HighClear_RegisterValue"])
                     {
                         WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear values are not equal.");
-                        _Tag.Errors.Add("Clear values are not equal.");
+                        _Tag.Errors.Add("Clear.");
                         if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                         return false;
                     }
@@ -579,14 +542,14 @@ namespace PGE_InputCheck
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Clear Register Value is not between L and H.");
-                    _Tag.Errors.Add("Clear Register Value is not between L and H.");
+                    _Tag.Errors.Add("Clear.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckClearValue)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify clear value. {EX_CheckClearValue}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckClearValue: {EX_CheckClearValue}");
                 _Tag.Errors.Add("EX_CheckClearValue.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -625,14 +588,14 @@ namespace PGE_InputCheck
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Underrange Register Value is not below LL.");
-                    _Tag.Errors.Add("Underrange Register Value is not below LL.");
+                    _Tag.Errors.Add("Underrange.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckUnderrange)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify underrange value: {EX_CheckUnderrange}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckUnderrange: {EX_CheckUnderrange}");
                 _Tag.Errors.Add("EX_CheckUnderrange.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -649,7 +612,10 @@ namespace PGE_InputCheck
                 {
                     if (!_Tag.DoubleParameters.ContainsKey("Overrange_RegisterValue"))
                     {
-                        throw new Exception("Tag does not contain an Overrange Register Value.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Overrange is missing.");
+                        _Tag.Errors.Add("Overrange.");
+                        if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                        return false;
                     }
                     if (!_Tag.DoubleParameters.ContainsKey("MOP_RegisterValue"))
                     {
@@ -662,7 +628,10 @@ namespace PGE_InputCheck
                 {
                     if (!_Tag.IntParameters.ContainsKey("Overrange_RegisterValue"))
                     {
-                        throw new Exception("Tag does not contain an Overrange Register Value.");
+                        WriteToLog(DebugLog, "info", $"{_Tag.name}: Overrange is missing.");
+                        _Tag.Errors.Add("Overrange.");
+                        if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                        return false;
                     }
 
                     if (!_Tag.IntParameters.ContainsKey("MOP_RegisterValue"))
@@ -680,14 +649,14 @@ namespace PGE_InputCheck
                 else
                 {
                     WriteToLog(DebugLog, "info", $"{_Tag.name}: Overrange is not above MOP.");
-                    _Tag.Errors.Add("Overrange is not above MOP.");
+                    _Tag.Errors.Add("Overrange.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckOverrange)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify overrange value: {EX_CheckOverrange}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckOverrange: {EX_CheckOverrange}");
                 _Tag.Errors.Add("EX_CheckOverrange.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
@@ -699,6 +668,16 @@ namespace PGE_InputCheck
         {
             try
             {
+                var raw = _Tag.register_EURange;
+                if (Regex.Matches(raw, "['/']").Count == 0)
+                {
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Range did not carry through CSV conversion.");
+                    _Tag.Errors.Add("Check linearity manually.");
+                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
+                    return false;
+                }
+
+
                 var result = false;
                 var factor = 0;
                 //equal
@@ -876,15 +855,15 @@ namespace PGE_InputCheck
                 }
                 else
                 {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: 'Register Value' and 'Expected Result' values are not linear.");
-                    _Tag.Errors.Add("'Register Value' and 'Expected Result' values are not linear.");
+                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Values are not linear.");
+                    _Tag.Errors.Add("Linearity.");
                     if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                     return false;
                 }
             }
             catch (Exception EX_CheckLinearity)
             {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: Could not verify linearity: {EX_CheckLinearity}");
+                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_CheckLinearity: {EX_CheckLinearity}");
                 _Tag.Errors.Add("EX_CheckLinearity.");
                 if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
                 return false;
