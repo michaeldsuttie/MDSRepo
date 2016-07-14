@@ -6,32 +6,25 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Microsoft.Office.Interop.Excel;
 
-[assembly: AssemblyVersion("1.3.*")]
+[assembly: AssemblyVersion("2.0.*")]
 
-#if DEBUG
-
-#endif
 namespace PGE_InputCheck
 {
-
     class Program
     {
         private static Logger DebugLog { get; set; }
-        //private static List<string> Headers { get; set; }
         public static Tag PreviousTag { get; set; }
         public static List<Tag> ErrorTags { get; set; }
 
         static void Main(string[] args)
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
-            ErrorTags = new List<Tag>();
-
             WriteToLog(DebugLog, "info", $"{Assembly.GetExecutingAssembly().FullName}", false);
-
+        RERUN:
+            ErrorTags = new List<Tag>();
 #if DEBUG
             //var fileName = "Foley_Rnch";
             //var fileName = "Livermore_Jct";
@@ -45,16 +38,14 @@ namespace PGE_InputCheck
             //var fileName = "Ruby_Intertie";
             //var fileName = "Lodi_Field";
             //var fileName = "Wild_Goose_Grdly";
-            var fileName = "Panoche.csv";
+            //var fileName = "Panoche.csv";
+            //var fileName = "Bethany_K.csv";
+            var fileName = "Bethany_K.xlsx";
             string filePath = $"{AppDomain.CurrentDomain.BaseDirectory}{fileName}";
-
-            string workingDirectory = $@"{AppDomain.CurrentDomain.BaseDirectory}InputFiles\";
-            if (!Directory.Exists(workingDirectory)) Directory.CreateDirectory(workingDirectory);
-
 #else
             if (args.Length == 0)
             {
-                WriteToLog(DebugLog, "error", $"Please supply a file name without the file extension.", false);
+                WriteToLog(DebugLog, "error", $"Please supply a file name with the file extension.", false);
                 ExitApp();
             }
 
@@ -65,12 +56,12 @@ namespace PGE_InputCheck
                 ExitApp();
             }
 #endif
+            WriteToLog(DebugLog, "info", "Parsing file...", false);
+            var xlsxContent = parseXLSX(filePath);
 
-            var csvContent = parseCSV(filePath);
-
-            foreach (var record in csvContent)
+            WriteToLog(DebugLog, "info", "Checking parameters...", false);
+            foreach (var record in xlsxContent)
             {
-                var parametersValid = ParseParameters(record.Value);
                 if (ErrorTags.Contains(record.Value)) continue;
                 var progressionValid = CheckValueProgression(record.Value);
                 var clearValid = CheckClearValue(record.Value);
@@ -82,8 +73,29 @@ namespace PGE_InputCheck
                     var IntValueValid = CheckIntValue(record.Value);
                 }
             }
-            DisplayErrorTags(ErrorTags);
-            ExitApp();
+            if (ErrorTags.Count != 0) DisplayErrorTags(ErrorTags);
+            else
+            {
+                Console.Write(Environment.NewLine);
+                WriteToLog(DebugLog, "info", "No errors found!", false);
+            }
+            while (true)
+            {
+                Console.Write(Environment.NewLine);
+                WriteToLog(DebugLog, "info", "Do you want to run again? [Y/N]", false);
+                var keyPress = Console.ReadLine().ToUpper();
+                if (keyPress == "Y")
+                {
+                    Console.Write(Environment.NewLine);
+                    WriteToLog(DebugLog, "info", "Re-run initiated...", false);
+                    goto RERUN;
+                }
+                else if (keyPress == "N")
+                {
+                    Console.Write(Environment.NewLine);
+                    ExitApp();
+                }
+            }
         }
 
         private static Logger ConfigLogger(Logger _logger, string _logName)
@@ -123,263 +135,188 @@ namespace PGE_InputCheck
 
         private static void ExitApp()
         {
-            WriteToLog(DebugLog, "info", "Press any key to exit...", false);
-            Console.ReadKey();
             WriteToLog(DebugLog, "info", "Exiting app...", false);
             Environment.Exit(0);
         }
 
-        public static Dictionary<string, Tag> parseCSV(string _path)
+        public static Dictionary<string, Tag> parseXLSX(string _path)
         {
+            var excel = new Application();
+            var workBook = excel.Workbooks.Open(_path);
             try
             {
-                using (StreamReader readFile = new StreamReader(_path))
-                {
-                    string line;
-                    int rowIndex = 0;
-                    PreviousTag = new Tag();
-                    var CSVContent = new Dictionary<string, Tag>();
-                    var templist = new List<string>();
+                _Worksheet tab = workBook.Sheets[1];
+                var usedRange = tab.UsedRange;
+                var lastRow = usedRange.Find("*", SearchOrder: XlSearchOrder.xlByRows, SearchDirection: XlSearchDirection.xlPrevious).Row;
+                var range = tab.Range[tab.Cells[3, 2], tab.Cells[lastRow, 9]];
+                var previousTag = new Tag();
+                var XLSXContent = new Dictionary<string, Tag>();
+                var regexPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
 
-                    while ((line = readFile.ReadLine()) != null)
+                foreach (var row in Enumerable.Range(1, lastRow))
+                {
+                    var tempTag = new Tag();
+
+                    string tagName = range.Cells[row, 1].Text;
+                    string registerEURange = range.Cells[row, 2].Text;
+                    string dataType = range.Cells[row, 4].Text;
+                    string registerValue = range.Cells[row, 6].Text;
+                    string expectedResult = range.Cells[row, 7].Text;
+                    string AlarmState = range.Cells[row, 8].Text;
+                    AlarmState = AlarmState.Replace("-6%", "");
+
+                    if (tagName.Contains("Cmd") || AlarmState == string.Empty) continue;
+
+                    if (tagName == string.Empty) tagName = previousTag.name;
+                    if (XLSXContent.ContainsKey(tagName)) tempTag = previousTag;
+                    else
                     {
-                        string[] row = line.Split(',');
-                        if (row[1].Contains("_Cmd") || (!row[1].Contains("_") && !PreviousTag.name.Contains("_")))
-                        {
-                            rowIndex++;
-                            continue;
-                        }
-                        if (CSVContent.ContainsKey((row[1] == string.Empty ? PreviousTag.name : row[1])))
-                        {
-                            var record = CSVContent.Where(x => x.Key == PreviousTag.name).FirstOrDefault();
-                            for (int i = 0; i < row.Count(); i++)
-                            {
-                                switch (i)
-                                {
-                                    case 6:
-                                        switch (row[8])
-                                        {
-                                            case "Underrange-6%":
-                                                record.Value.Underrange_RegisterValue = row[i];
-                                                break;
-                                            case "Underrange":
-                                                record.Value.Underrange_RegisterValue = row[i];
-                                                break;
-                                            case "LL":
-                                                record.Value.LL_RegisterValue = row[i];
-                                                break;
-                                            case "L":
-                                                record.Value.L_RegisterValue = row[i];
-                                                break;
-                                            case "H":
-                                                record.Value.H_RegisterValue = row[i];
-                                                break;
-                                            case "HH":
-                                                record.Value.HH_RegisterValue = row[i];
-                                                break;
-                                            case "MOP":
-                                                record.Value.MOP_RegisterValue = row[i];
-                                                break;
-                                            case "Clear":
-                                                record.Value.HighClear_RegisterValue = row[i];
-                                                break;
-                                            case "Overrange-6%":
-                                                record.Value.Overrange_RegisterValue = row[i];
-                                                break;
-                                            case "Overrange":
-                                                record.Value.Overrange_RegisterValue = row[i];
-                                                break;
-                                        }
-                                        break;
-                                    case 7:
-                                        switch (row[8])
-                                        {
-                                            case "Underrange-6%":
-                                                record.Value.Underrange_ExpectedResult = row[i];
-                                                break;
-                                            case "Underrange":
-                                                record.Value.Underrange_ExpectedResult = row[i];
-                                                break;
-                                            case "LL":
-                                                record.Value.LL_ExpectedResult = row[i];
-                                                break;
-                                            case "L":
-                                                record.Value.L_ExpectedResult = row[i];
-                                                break;
-                                            case "H":
-                                                record.Value.H_ExpectedResult = row[i];
-                                                break;
-                                            case "HH":
-                                                record.Value.HH_ExpectedResult = row[i];
-                                                break;
-                                            case "MOP":
-                                                record.Value.MOP_ExpectedResult = row[i];
-                                                break;
-                                            case "Clear":
-                                                record.Value.HighClear_ExpectedResult = row[i];
-                                                break;
-                                            case "Overrange-6%":
-                                                record.Value.Overrange_ExpectedResult = row[i];
-                                                break;
-                                            case "Overrange":
-                                                record.Value.Overrange_ExpectedResult = row[i];
-                                                break;
-                                        }
-                                        break;
-                                }
-                            }
-                        }
-                        else if (!CSVContent.ContainsKey(row[1]) && rowIndex >= 2)
-                        {
-                            if (PreviousTag == null)
-                            {
-                                PreviousTag = new Tag();
-                            }
-                            var tempRecord = new Tag();
-                            for (int i = 0; i < row.Count(); i++)
-                            {
-                                switch (i)
-                                {
-                                    case 1:
-                                        tempRecord.name = row[i];
-                                        PreviousTag.name = row[i];
-                                        break;
-                                    case 2:
-                                        tempRecord.register_EURange = row[i];
-                                        break;
-                                    case 4:
-                                        tempRecord.DataType = row[i];
-                                        break;
-                                    case 6:
-                                        tempRecord.LowClear_RegisterValue = row[i];
-                                        break;
-                                    case 7:
-                                        tempRecord.LowClear_ExpectedResult = row[i];
-                                        break;
-                                }
-                            }
-                            CSVContent.Add(row[1], tempRecord);
-                        }
-                        else
-                        {
-                            WriteToLog(DebugLog, "info", $"Row[{rowIndex}] not processed.");
-                        }
+                        tempTag.name = tagName;
+                        tempTag.DataType = dataType;
 
-                        rowIndex++;
+                        //Parse Register/EU Range
+                        var rawRangeMatches = Regex.Matches(registerEURange, regexPattern);
+                        var rawRangeMatchesList = new List<string>();
+                        var parsedRangeMatches = new List<double>();
+                        foreach (var m in rawRangeMatches)
+                        {
+                            rawRangeMatchesList.Add(m.ToString());
+                        }
+                        for (int c = 0; c < rawRangeMatchesList.Count; c++)
+                        {
+                            if (rawRangeMatchesList[c].ToString().EndsWith("."))
+                            {
+                                var nextMatch = rawRangeMatchesList[c + 1];
+                                var val = rawRangeMatchesList[c].ToString() + nextMatch.ToString();
+                                if (val.StartsWith("-") && !(c % 2 == 0)) val = val.Replace("-", "");
+                                parsedRangeMatches.Add(double.Parse(val.ToString()));
+                                rawRangeMatchesList.RemoveAt(c + 1);
+                            }
+                            else
+                            {
+                                if (rawRangeMatchesList[c].StartsWith("-") && !(c % 2 == 0)) rawRangeMatchesList[c] = rawRangeMatchesList[c].Replace("-", "");
+                                parsedRangeMatches.Add(double.Parse(rawRangeMatchesList[c].ToString()));
+                            }
+                        }
+                        tempTag.Low_RegisterRange = parsedRangeMatches[0];
+                        tempTag.High_RegisterRange = parsedRangeMatches[1];
+                        tempTag.Low_EURange = parsedRangeMatches[2];
+                        tempTag.High_EURange = parsedRangeMatches[3];
                     }
-                    WriteToLog(DebugLog, "info", $"Sucessfully parsed CSV into program: '{_path}'. {CSVContent.Count} Tags added.", false);
-                    return CSVContent;
+
+
+                    if (tempTag.DataType == "INT")
+                    {
+                        switch (AlarmState)
+                        {
+                            case "Underrange":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("Underrange_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "LL":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("LL_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "L":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("L_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "H":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("H_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "HH":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("HH_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "MOP":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("MOP_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "Clear":
+                                if (!tempTag.IntParameters.ContainsKey("LowClear_RegisterValue"))
+                                {
+                                    if (registerValue != string.Empty) tempTag.IntParameters.Add("LowClear_RegisterValue", int.Parse(registerValue));
+                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                }
+                                else
+                                {
+                                    if (registerValue != string.Empty) tempTag.IntParameters.Add("HighClear_RegisterValue", int.Parse(registerValue));
+                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                }
+                                break;
+                            case "Overrange":
+                                if (registerValue != string.Empty) tempTag.IntParameters.Add("Overrange_RegisterValue", int.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                        }
+                    }
+                    else if (tempTag.DataType == "REAL")
+                    {
+                        switch (AlarmState)
+                        {
+                            case "Underrange":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "LL":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("LL_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "L":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("L_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "H":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("H_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "HH":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("HH_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "MOP":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                            case "Clear":
+                                if (!tempTag.DoubleParameters.ContainsKey("LowClear_RegisterValue"))
+                                {
+                                    if (registerValue != string.Empty) tempTag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(registerValue));
+                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                }
+                                else
+                                {
+                                    if (registerValue != string.Empty) tempTag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(registerValue));
+                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                }
+                                break;
+                            case "Overrange":
+                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(registerValue));
+                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
+                                break;
+                        }
+                    }
+                    if (!XLSXContent.ContainsKey(tempTag.name))
+                    {
+                        XLSXContent.Add(tempTag.name, tempTag);
+                    }
+                    previousTag = tempTag;
                 }
+                return XLSXContent;
             }
-            catch (Exception EX_ParseCSV)
+            catch (Exception EX_ParseXLSX)
             {
-                if (EX_ParseCSV.HResult == -2147024864)
-                {
-                    WriteToLog(DebugLog, "error", $"Could not parse CSV. Please close file and try again.", false);
-                    ExitApp();
-                }
-                else
-                {
-                    WriteToLog(DebugLog, "error", $"EX_ParseCSV: {EX_ParseCSV}");
-                }
+                WriteToLog(DebugLog, "error", $"EX_ParseXLSX: {EX_ParseXLSX}");
                 return null;
             }
-        }
-
-        public static bool ParseParameters(Tag _Tag)
-        {
-            try
+            finally
             {
-                var raw = _Tag.register_EURange;
-                var regexPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
-                var rawRangeMatches = Regex.Matches(raw, regexPattern);
-                var rawRangeMatchesList = new List<string>();
-                var parsedRangeMatches = new List<double>();
-
-                if (Regex.Matches(raw, "['/']").Count != 0)
-                {
-                    foreach (var m in rawRangeMatches)
-                    {
-                        rawRangeMatchesList.Add(m.ToString());
-                    }
-                    for (int c = 0; c < rawRangeMatchesList.Count; c++)
-                    {
-                        if (rawRangeMatchesList[c].ToString().EndsWith("."))
-                        {
-                            var nextMatch = rawRangeMatchesList[c + 1];
-                            var val = rawRangeMatchesList[c].ToString() + nextMatch.ToString();
-                            if (val.StartsWith("-") && !(c % 2 == 0)) val = val.Replace("-", "");
-                            parsedRangeMatches.Add(double.Parse(val.ToString()));
-                            rawRangeMatchesList.RemoveAt(c + 1);
-                        }
-                        else
-                        {
-                            if (rawRangeMatchesList[c].StartsWith("-") && !(c % 2 == 0)) rawRangeMatchesList[c] = rawRangeMatchesList[c].Replace("-", "");
-                            parsedRangeMatches.Add(double.Parse(rawRangeMatchesList[c].ToString()));
-                        }
-                    }
-                    _Tag.Low_RegisterRange = parsedRangeMatches[0];
-                    _Tag.High_RegisterRange = parsedRangeMatches[1];
-                    _Tag.Low_EURange = parsedRangeMatches[2];
-                    _Tag.High_EURange = parsedRangeMatches[3];
-                }
-
-                if (_Tag.LL_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(_Tag.LL_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.L_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(_Tag.L_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.H_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(_Tag.H_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.HH_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(_Tag.HH_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.MOP_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(_Tag.MOP_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.LowClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(_Tag.LowClear_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.HighClear_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(_Tag.HighClear_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.Underrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(_Tag.Underrange_ExpectedResult, regexPattern).ToString()));
-                if (_Tag.Overrange_ExpectedResult != string.Empty) _Tag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(_Tag.Overrange_ExpectedResult, regexPattern).ToString()));
-
-                if (_Tag.DataType == "REAL")
-                {
-                    //Register Values
-                    if (_Tag.LL_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("LL_RegisterValue", double.Parse(_Tag.LL_RegisterValue));
-                    if (_Tag.L_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("L_RegisterValue", double.Parse(_Tag.L_RegisterValue));
-                    if (_Tag.H_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("H_RegisterValue", double.Parse(_Tag.H_RegisterValue));
-                    if (_Tag.HH_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("HH_RegisterValue", double.Parse(_Tag.HH_RegisterValue));
-                    if (_Tag.MOP_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(_Tag.MOP_RegisterValue));
-                    if (_Tag.LowClear_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(_Tag.LowClear_RegisterValue));
-                    if (_Tag.HighClear_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(_Tag.HighClear_RegisterValue));
-                    if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(_Tag.Underrange_RegisterValue));
-                    if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(_Tag.Overrange_RegisterValue));
-
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed 'Register/EU Range', 'Register Values', 'Expected Results'.");
-                    return true;
-                }
-                else if (_Tag.DataType == "INT")
-                {
-                    //Register Values
-                    if (_Tag.LL_RegisterValue != string.Empty) _Tag.IntParameters.Add("LL_RegisterValue", int.Parse(_Tag.LL_RegisterValue));
-                    if (_Tag.L_RegisterValue != string.Empty) _Tag.IntParameters.Add("L_RegisterValue", int.Parse(_Tag.L_RegisterValue));
-                    if (_Tag.H_RegisterValue != string.Empty) _Tag.IntParameters.Add("H_RegisterValue", int.Parse(_Tag.H_RegisterValue));
-                    if (_Tag.HH_RegisterValue != string.Empty) _Tag.IntParameters.Add("HH_RegisterValue", int.Parse(_Tag.HH_RegisterValue));
-                    if (_Tag.MOP_RegisterValue != string.Empty) _Tag.IntParameters.Add("MOP_RegisterValue", int.Parse(_Tag.MOP_RegisterValue));
-                    if (_Tag.LowClear_RegisterValue != string.Empty) _Tag.IntParameters.Add("LowClear_RegisterValue", int.Parse(_Tag.LowClear_RegisterValue));
-                    if (_Tag.HighClear_RegisterValue != string.Empty) _Tag.IntParameters.Add("HighClear_RegisterValue", int.Parse(_Tag.HighClear_RegisterValue));
-                    if (_Tag.Underrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Underrange_RegisterValue", int.Parse(_Tag.Underrange_RegisterValue));
-                    if (_Tag.Overrange_RegisterValue != string.Empty) _Tag.IntParameters.Add("Overrange_RegisterValue", int.Parse(_Tag.Overrange_RegisterValue));
-
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Successfully parsed 'Register/EU Range', 'Register Values' and 'Expected Results'.");
-                    return true;
-                }
-                _Tag.Errors.Add("Parameter format.");
-                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
-                return false;
-            }
-            catch (Exception EX_ParseParameters)
-            {
-                WriteToLog(DebugLog, "error", $"{_Tag.name}: EX_ParseParameters: {EX_ParseParameters}");
-                _Tag.Errors.Add("EX_ParseParameters.");
-                if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
-                return false;
+                workBook.Close();
+                excel.Quit();
             }
         }
 
-        //Item1
         public static bool CheckValueProgression(Tag _Tag)
         {
             try
@@ -449,23 +386,23 @@ namespace PGE_InputCheck
                 var num = 32767;
 
                 var check1 = true;
-                if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.IntParameters["LowClear_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("LowClear_RegisterValue")) check1 = _Tag.IntParameters["LowClear_RegisterValue"] <= num;
                 var check2 = true;
-                if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.IntParameters["Underrange_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("Underrange_RegisterValue")) check2 = _Tag.IntParameters["Underrange_RegisterValue"] <= num;
                 var check3 = true;
-                if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.IntParameters["Overrange_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("Overrange_RegisterValue")) check3 = _Tag.IntParameters["Overrange_RegisterValue"] <= num;
                 var check4 = true;
-                if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.IntParameters["HighClear_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("HighClear_RegisterValue")) check4 = _Tag.IntParameters["HighClear_RegisterValue"] <= num;
                 var check5 = true;
-                if (_Tag.IntParameters.ContainsKey("`LL_RegisterValue")) check5 = _Tag.IntParameters["LL_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("`LL_RegisterValue")) check5 = _Tag.IntParameters["LL_RegisterValue"] <= num;
                 var check6 = true;
-                if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.IntParameters["L_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("L_RegisterValue")) check6 = _Tag.IntParameters["L_RegisterValue"] <= num;
                 var check7 = true;
-                if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.IntParameters["H_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("H_RegisterValue")) check7 = _Tag.IntParameters["H_RegisterValue"] <= num;
                 var check8 = true;
-                if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.IntParameters["HH_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("HH_RegisterValue")) check8 = _Tag.IntParameters["HH_RegisterValue"] <= num;
                 var check9 = true;
-                if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.IntParameters["MOP_RegisterValue"] < num;
+                if (_Tag.IntParameters.ContainsKey("MOP_RegisterValue")) check9 = _Tag.IntParameters["MOP_RegisterValue"] <= num;
 
                 result = check1 && check2 && check3 && check4 && check5 && check6 && check7 && check8 && check9;
                 if (result)
@@ -490,7 +427,6 @@ namespace PGE_InputCheck
             }
         }
 
-        //Item2
         public static bool CheckClearValue(Tag _Tag)
         {
             try
@@ -556,7 +492,6 @@ namespace PGE_InputCheck
             }
         }
 
-        //Item3
         public static bool CheckUnderrange(Tag _Tag)
         {
             try
@@ -602,7 +537,6 @@ namespace PGE_InputCheck
             }
         }
 
-        //Item4
         public static bool CheckOverrange(Tag _Tag)
         {
             try
@@ -663,21 +597,10 @@ namespace PGE_InputCheck
             }
         }
 
-        //Item5
         public static bool CheckLinearity(Tag _Tag)
         {
             try
             {
-                var raw = _Tag.register_EURange;
-                if (Regex.Matches(raw, "['/']").Count == 0)
-                {
-                    WriteToLog(DebugLog, "info", $"{_Tag.name}: Range did not carry through CSV conversion.");
-                    _Tag.Errors.Add("Check linearity manually.");
-                    if (!ErrorTags.Contains(_Tag)) ErrorTags.Add(_Tag);
-                    return false;
-                }
-
-
                 var result = false;
                 var factor = 0;
                 //equal
@@ -705,7 +628,6 @@ namespace PGE_InputCheck
 
                 if (_Tag.DataType == "REAL")
                 {
-
                     if (!result && equal)
                     {
                         var check1 = true;
@@ -896,31 +818,12 @@ namespace PGE_InputCheck
         public double High_EURange = 0.0;
         public string DataType = string.Empty;
 
-        public string LowClear_RegisterValue = string.Empty;
-        public string LowClear_ExpectedResult = string.Empty;
-        public string Underrange_RegisterValue = string.Empty;
-        public string Underrange_ExpectedResult = string.Empty;
-        public string LL_RegisterValue = string.Empty;
-        public string LL_ExpectedResult = string.Empty;
-        public string L_RegisterValue = string.Empty;
-        public string L_ExpectedResult = string.Empty;
-        public string H_RegisterValue = string.Empty;
-        public string H_ExpectedResult = string.Empty;
-        public string HH_RegisterValue = string.Empty;
-        public string HH_ExpectedResult = string.Empty;
-        public string MOP_RegisterValue = string.Empty;
-        public string MOP_ExpectedResult = string.Empty;
-        public string Overrange_RegisterValue = string.Empty;
-        public string Overrange_ExpectedResult = string.Empty;
-        public string HighClear_RegisterValue = string.Empty;
-        public string HighClear_ExpectedResult = string.Empty;
-
         public Dictionary<string, int> IntParameters = new Dictionary<string, int>();
         public Dictionary<string, double> DoubleParameters = new Dictionary<string, double>();
         public List<string> Errors = new List<string>();
     }
 
-    [AttributeUsageAttribute(AttributeTargets.Assembly, Inherited = false)]
-    [ComVisibleAttribute(true)]
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
+    [ComVisible(true)]
     public sealed class AssemblyVersionAttribute : Attribute { }
 }
