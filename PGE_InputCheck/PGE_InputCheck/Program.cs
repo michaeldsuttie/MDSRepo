@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Office.Interop.Excel;
 
-[assembly: AssemblyVersion("2.0.*")]
+[assembly: AssemblyVersion("2.2.*")]
 
 namespace PGE_InputCheck
 {
@@ -40,7 +40,8 @@ namespace PGE_InputCheck
             //var fileName = "Wild_Goose_Grdly";
             //var fileName = "Panoche.csv";
             //var fileName = "Bethany_K.csv";
-            var fileName = "Bethany_K.xlsx";
+            //var fileName = "Bethany_K.xlsx";
+            var fileName = "Burney_K - Copy.xlsx";
             string filePath = $"{AppDomain.CurrentDomain.BaseDirectory}{fileName}";
 #else
             if (args.Length == 0)
@@ -58,6 +59,12 @@ namespace PGE_InputCheck
 #endif
             WriteToLog(DebugLog, "info", "Parsing file...", false);
             var xlsxContent = parseXLSX(filePath);
+
+            if (xlsxContent == null)
+            {
+                WriteToLog(DebugLog, "error", "Could not parse file. Please check file contents and try again.", false);
+                ExitApp();
+            }
 
             WriteToLog(DebugLog, "info", "Checking parameters...", false);
             foreach (var record in xlsxContent)
@@ -166,12 +173,24 @@ namespace PGE_InputCheck
                     AlarmState = AlarmState.Replace("-6%", "");
 
                     if (tagName.Contains("Cmd") || AlarmState == string.Empty) continue;
-
                     if (tagName == string.Empty) tagName = previousTag.name;
-                    if (XLSXContent.ContainsKey(tagName)) tempTag = previousTag;
+                    if (XLSXContent.ContainsKey(tagName))
+                    {
+                        tempTag = previousTag;
+                        if (ErrorTags.Contains(tempTag)) continue;
+                    }
                     else
                     {
                         tempTag.name = tagName;
+                        if (ErrorTags.Find(x => x.name == tempTag.name) != null) continue;
+                        if (registerEURange == string.Empty || dataType == string.Empty || registerValue == string.Empty || expectedResult == string.Empty || AlarmState == string.Empty)
+                        {
+                            WriteToLog(DebugLog, "error", $"Parameter cell empty @ row {row + 2}.");
+                            tempTag.Errors.Add("Parameter Empty.");
+                            ErrorTags.Add(tempTag);
+                            previousTag = tempTag;
+                            continue;
+                        }
                         tempTag.DataType = dataType;
 
                         //Parse Register/EU Range
