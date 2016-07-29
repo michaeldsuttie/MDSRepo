@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Office.Interop.Excel;
 
-[assembly: AssemblyVersion("2.2.*")]
+[assembly: AssemblyVersion("2.3.*")]
 
 namespace PGE_InputCheck
 {
@@ -41,7 +41,9 @@ namespace PGE_InputCheck
             //var fileName = "Panoche.csv";
             //var fileName = "Bethany_K.csv";
             //var fileName = "Bethany_K.xlsx";
-            var fileName = "Burney_K - Copy.xlsx";
+            //var fileName = "Burney_K - Copy.xlsx";
+            var fileName = "PGT_Malin.xlsx";
+
             string filePath = $"{AppDomain.CurrentDomain.BaseDirectory}{fileName}";
 #else
             if (args.Length == 0)
@@ -158,32 +160,35 @@ namespace PGE_InputCheck
                 var range = tab.Range[tab.Cells[3, 2], tab.Cells[lastRow, 9]];
                 var previousTag = new Tag();
                 var XLSXContent = new Dictionary<string, Tag>();
-                var regexPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
+                var regexNumberPattern = @"-?[0-9]+[.][0-9]+|-?[0-9]+";
+                var regexAlarmStatePattern = @"Overrange|Underrange|Clear|LL|L|HH|H|MOP";
+                var regexDataTypePattern = @"INT|REAL";
 
                 foreach (var row in Enumerable.Range(1, lastRow))
                 {
                     var tempTag = new Tag();
 
-                    string tagName = range.Cells[row, 1].Text;
-                    string registerEURange = range.Cells[row, 2].Text;
-                    string dataType = range.Cells[row, 4].Text;
-                    string registerValue = range.Cells[row, 6].Text;
-                    string expectedResult = range.Cells[row, 7].Text;
-                    string AlarmState = range.Cells[row, 8].Text;
-                    AlarmState = AlarmState.Replace("-6%", "");
+                    tempTag.name = range.Cells[row, 1].Text;
+                    tempTag.register_EURange = range.Cells[row, 2].Text;
+                    tempTag.DataType = Regex.Match(range.Cells[row, 4].Text, regexDataTypePattern).Value;
+                    string registerValue = Regex.Match(range.Cells[row, 6].Text, regexNumberPattern).Value;
+                    string expectedResult = Regex.Match(range.Cells[row, 7].Text, regexNumberPattern).Value;
+                    string AlarmState = Regex.Match(range.Cells[row, 8].Text, regexAlarmStatePattern).Value;
 
-                    if (tagName.Contains("Cmd") || AlarmState == string.Empty) continue;
-                    if (tagName == string.Empty) tagName = previousTag.name;
-                    if (XLSXContent.ContainsKey(tagName))
+                    var rvEmpty = registerValue != string.Empty;
+                    var erEmpty = expectedResult != string.Empty;
+                    var rvString = string.Empty;
+                    var erString = string.Empty;
+
+                    if (tempTag.name.Contains("Cmd") || AlarmState == string.Empty) continue;
+
+                    if (tempTag.name == string.Empty) tempTag.name = previousTag.name;
+                    if (ErrorTags.Find(x => x.name == tempTag.name) != null) continue;
+
+                    if (XLSXContent.ContainsKey(tempTag.name))
                     {
                         tempTag = previousTag;
-                        if (ErrorTags.Contains(tempTag)) continue;
-                    }
-                    else
-                    {
-                        tempTag.name = tagName;
-                        if (ErrorTags.Find(x => x.name == tempTag.name) != null) continue;
-                        if (registerEURange == string.Empty || dataType == string.Empty || registerValue == string.Empty || expectedResult == string.Empty || AlarmState == string.Empty)
+                        if (registerValue == string.Empty || expectedResult == string.Empty || AlarmState == string.Empty)
                         {
                             WriteToLog(DebugLog, "error", $"Parameter cell empty @ row {row + 2}.");
                             tempTag.Errors.Add("Parameter Empty.");
@@ -191,10 +196,19 @@ namespace PGE_InputCheck
                             previousTag = tempTag;
                             continue;
                         }
-                        tempTag.DataType = dataType;
+                    }
+                    else
+                    {
+                        if (tempTag.register_EURange == string.Empty || tempTag.DataType == string.Empty || registerValue == string.Empty || expectedResult == string.Empty || AlarmState == string.Empty)
+                        {
+                            WriteToLog(DebugLog, "error", $"Parameter cell empty @ row {row + 2}.");
+                            tempTag.Errors.Add("Parameter Empty.");
+                            ErrorTags.Add(tempTag);
+                            previousTag = tempTag;
+                            continue;
+                        }
 
-                        //Parse Register/EU Range
-                        var rawRangeMatches = Regex.Matches(registerEURange, regexPattern);
+                        var rawRangeMatches = Regex.Matches(tempTag.register_EURange, regexNumberPattern);
                         var rawRangeMatchesList = new List<string>();
                         var parsedRangeMatches = new List<double>();
                         foreach (var m in rawRangeMatches)
@@ -223,99 +237,61 @@ namespace PGE_InputCheck
                         tempTag.High_EURange = parsedRangeMatches[3];
                     }
 
+                    switch (AlarmState)
+                    {
+                        case "Underrange":
+                            rvString = "Underrange_RegisterValue";
+                            erString = "Underrange_ExpectedResult";
+                            break;
+                        case "LL":
+                            rvString = "LL_RegisterValue";
+                            erString = "LL_ExpectedResult";
+                            break;
+                        case "L":
+                            rvString = "L_RegisterValue";
+                            erString = "L_ExpectedResult";
+                            break;
+                        case "H":
+                            rvString = "H_RegisterValue";
+                            erString = "H_ExpectedResult";
+                            break;
+                        case "HH":
+                            rvString = "HH_RegisterValue";
+                            erString = "HH_ExpectedResult";
+                            break;
+                        case "MOP":
+                            rvString = "MOP_RegisterValue";
+                            erString = "MOP_ExpectedResult";
+                            break;
+                        case "Clear":
+                            if (!tempTag.IntParameters.ContainsKey("LowClear_RegisterValue"))
+                            {
+                                rvString = "LowClear_RegisterValue";
+                                erString = "LowClear_ExpectedResult";
+                            }
+                            else
+                            {
+                                rvString = "HighClear_RegisterValue";
+                                erString = "HighClear_ExpectedResult";
+                            }
+                            break;
+                        case "Overrange":
+                            rvString = "Overrange_RegisterValue";
+                            erString = "Overrange_ExpectedResult";
+                            break;
+                    }
 
                     if (tempTag.DataType == "INT")
                     {
-                        switch (AlarmState)
-                        {
-                            case "Underrange":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("Underrange_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "LL":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("LL_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "L":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("L_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "H":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("H_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "HH":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("HH_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "MOP":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("MOP_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "Clear":
-                                if (!tempTag.IntParameters.ContainsKey("LowClear_RegisterValue"))
-                                {
-                                    if (registerValue != string.Empty) tempTag.IntParameters.Add("LowClear_RegisterValue", int.Parse(registerValue));
-                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                }
-                                else
-                                {
-                                    if (registerValue != string.Empty) tempTag.IntParameters.Add("HighClear_RegisterValue", int.Parse(registerValue));
-                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                }
-                                break;
-                            case "Overrange":
-                                if (registerValue != string.Empty) tempTag.IntParameters.Add("Overrange_RegisterValue", int.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                        }
+                        tempTag.IntParameters.Add(rvString, int.Parse(registerValue));
+                        tempTag.DoubleParameters.Add(erString, double.Parse(expectedResult));
                     }
                     else if (tempTag.DataType == "REAL")
                     {
-                        switch (AlarmState)
-                        {
-                            case "Underrange":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("Underrange_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Underrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "LL":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("LL_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LL_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "L":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("L_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("L_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "H":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("H_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("H_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "HH":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("HH_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HH_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "MOP":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("MOP_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("MOP_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                            case "Clear":
-                                if (!tempTag.DoubleParameters.ContainsKey("LowClear_RegisterValue"))
-                                {
-                                    if (registerValue != string.Empty) tempTag.DoubleParameters.Add("LowClear_RegisterValue", double.Parse(registerValue));
-                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("LowClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                }
-                                else
-                                {
-                                    if (registerValue != string.Empty) tempTag.DoubleParameters.Add("HighClear_RegisterValue", double.Parse(registerValue));
-                                    if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("HighClear_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                }
-                                break;
-                            case "Overrange":
-                                if (registerValue != string.Empty) tempTag.DoubleParameters.Add("Overrange_RegisterValue", double.Parse(registerValue));
-                                if (expectedResult != string.Empty) tempTag.DoubleParameters.Add("Overrange_ExpectedResult", double.Parse(Regex.Match(expectedResult, regexPattern).ToString()));
-                                break;
-                        }
+                        tempTag.DoubleParameters.Add(rvString, double.Parse(registerValue));
+                        tempTag.DoubleParameters.Add(erString, double.Parse(expectedResult));
                     }
+
                     if (!XLSXContent.ContainsKey(tempTag.name))
                     {
                         XLSXContent.Add(tempTag.name, tempTag);
