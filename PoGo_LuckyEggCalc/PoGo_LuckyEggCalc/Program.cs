@@ -8,23 +8,30 @@ using NLog.Targets;
 using Microsoft.Office.Interop.Excel;
 using System.Reflection;
 using System.Runtime.Serialization.Json;
+using Newtonsoft.Json;
 
 namespace PoGo_LuckyEggCalc
 {
     class Program : AppBase
     {
+        public List<Pokemon> Pokedex { get; set; }
+
         static void Main(string[] args)
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
             WriteToLog(DebugLog, "info", $"{Assembly.GetExecutingAssembly().FullName}", false);
+            var workingDir = AppDomain.CurrentDomain.BaseDirectory;
+            var fileName = "pokedex.json";
+            var filePath = $"{workingDir}{fileName}";
         RERUN:
+            var Pokedex = new Pokedex();
             var poke1 = new Pokemon("Pidgey", true, 68, 462, 12);
             var poke2 = new Pokemon("Ratatta", true, 56, 423, 25);
-            var workingDir = $@"C:\Users\msuttie\Desktop\testdir\";
-            var fileName = "testfile.txt";
-            var filePath = $"{workingDir}{fileName}";
-            //Directory.CreateDirectory(workingDir, new DirectorySecurity(workingDir, AccessControlSections.Owner));
+            Pokedex.Inventory.Add(poke1.name, poke1);
+            Pokedex.Inventory.Add(poke2.name, poke2);
+
             JsonOperations.WriteDataToFile(filePath, new object[] { poke1, poke2 });
+            JsonOperations.ReadDataFromFile(filePath);
             ExitApp();
             goto RERUN;
         }
@@ -33,7 +40,7 @@ namespace PoGo_LuckyEggCalc
 
 
     [DataContract]
-    class Pokemon
+    public class Pokemon
     {
         public Pokemon(string _name = "", bool _inPokedex = false, int _qtyPokemon = -1, int _qtyCandy = -1, int _candyToEvolve = -1)
         {
@@ -45,15 +52,26 @@ namespace PoGo_LuckyEggCalc
         }
 
         [DataMember]
-        string name;
+        //[JsonProperty("name")]
+        internal string name;
         [DataMember]
-        bool inPokedex;
+        //[JsonProperty("inPokedex")]
+        internal bool inPokedex;
         [DataMember]
-        int qtyPokemon;
+        //[JsonProperty("qtyPokemon")]
+        internal int qtyPokemon;
         [DataMember]
-        int qtyCandy;
+        //[JsonProperty("qtyCandy")]
+        internal int qtyCandy;
         [DataMember]
-        int candyToEvolve;
+        //[JsonProperty("candyToEvolve")]
+        internal int candyToEvolve;
+    }
+
+    class Pokedex
+    {
+        internal Dictionary<string,Pokemon> Inventory { get; set; }
+
     }
 
     class AppBase
@@ -131,11 +149,11 @@ namespace PoGo_LuckyEggCalc
 
             xlWorkbook.Close();
             xlApp.Quit();
-            
+
         }
         internal static Dictionary<string, Pokemon> Getdata()
         {
-            return null;
+            throw new NotImplementedException();
         }
     }
 
@@ -145,12 +163,28 @@ namespace PoGo_LuckyEggCalc
         {
             var stream = new FileStream(_filePath, FileMode.Create, FileAccess.ReadWrite);
             var ser = new DataContractJsonSerializer(typeof(Pokemon));
-            foreach(object o in _objs)
+            foreach (object o in _objs)
             {
                 ser.WriteObject(stream, o);
             }
             stream.Flush();
             stream.Close();
+        }
+
+        internal static object ReadDataFromFile(string _filePath)
+        {
+            List<object> objs = new List<object>();
+            string content = File.ReadAllText(_filePath);
+            var ser = new DataContractJsonSerializer(typeof(Pokemon));
+            var stream = new FileStream(_filePath, FileMode.Open, FileAccess.Read);
+            //ser.
+            //while(ser.ReadObject.ToString() != null)
+            //{
+            //    objs.Add()
+            //}
+            //var pokedex = ser.ReadObject()
+            //var pokedex = JsonConvert.DeserializeObject<Pokemon>(content);
+            return objs;
         }
     }
 }
