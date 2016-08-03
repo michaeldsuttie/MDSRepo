@@ -25,28 +25,23 @@ namespace PoGo_LuckyEggCalc
             var filePath = $"{workingDir}{fileName}";
         RERUN:
             var Pokedex = new Pokedex();
+            //var tempDex = new Dictionary<string, Pokemon>();
+
             var poke1 = new Pokemon("Pidgey", true, 68, 462, 12);
             var poke2 = new Pokemon("Ratatta", true, 56, 423, 25);
-            //Pokedex.Inventory.Add(poke1.name, poke1);
-            //Pokedex.Inventory.Add(poke2.name, poke2);
-
-            var l = new List<Pokemon>();
-            l.Add(poke2);
-            l.Add(poke1);
+            Pokedex.Inventory.Add(poke2.name, poke2);
+            Pokedex.Inventory.Add(poke1.name, poke1);
             Console.WriteLine("BeforeSort:");
-
-            foreach (var o in l)
+            foreach (var o in Pokedex.Inventory)
             {
-
-                Console.WriteLine(o.name);
+                Console.WriteLine(o.Key);
             }
-
-            l.Sort();
+            //Pokedex = (Pokedex)Pokedex.Inventory.OrderBy(x => x.Key);
+            //Pokedex.Inventory = from entry in Pokedex.Inventory orderby entry.Key ascending select entry;
             Console.WriteLine("AfterSort:");
-
-            foreach (var o in l)
+            foreach (var o in Pokedex.Inventory)
             {
-                Console.WriteLine(o.name);
+                Console.WriteLine(o.Key);
             }
 
             JsonOperations.WriteDataToFile(filePath, new object[] { poke1, poke2 });
@@ -94,6 +89,10 @@ namespace PoGo_LuckyEggCalc
 
     class Pokedex
     {
+        public Pokedex()
+        {
+            Inventory = new Dictionary<string, Pokemon>();
+        }
         internal Dictionary<string, Pokemon> Inventory { get; set; }
     }
 
