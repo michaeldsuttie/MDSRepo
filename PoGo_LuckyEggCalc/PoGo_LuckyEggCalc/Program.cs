@@ -27,8 +27,27 @@ namespace PoGo_LuckyEggCalc
             var Pokedex = new Pokedex();
             var poke1 = new Pokemon("Pidgey", true, 68, 462, 12);
             var poke2 = new Pokemon("Ratatta", true, 56, 423, 25);
-            Pokedex.Inventory.Add(poke1.name, poke1);
-            Pokedex.Inventory.Add(poke2.name, poke2);
+            //Pokedex.Inventory.Add(poke1.name, poke1);
+            //Pokedex.Inventory.Add(poke2.name, poke2);
+
+            var l = new List<Pokemon>();
+            l.Add(poke2);
+            l.Add(poke1);
+            Console.WriteLine("BeforeSort:");
+
+            foreach (var o in l)
+            {
+
+                Console.WriteLine(o.name);
+            }
+
+            l.Sort();
+            Console.WriteLine("AfterSort:");
+
+            foreach (var o in l)
+            {
+                Console.WriteLine(o.name);
+            }
 
             JsonOperations.WriteDataToFile(filePath, new object[] { poke1, poke2 });
             JsonOperations.ReadDataFromFile(filePath);
@@ -40,7 +59,7 @@ namespace PoGo_LuckyEggCalc
 
 
     [DataContract]
-    public class Pokemon
+    public class Pokemon : IComparable<Pokemon>
     {
         public Pokemon(string _name = "", bool _inPokedex = false, int _qtyPokemon = -1, int _qtyCandy = -1, int _candyToEvolve = -1)
         {
@@ -66,12 +85,16 @@ namespace PoGo_LuckyEggCalc
         [DataMember]
         //[JsonProperty("candyToEvolve")]
         internal int candyToEvolve;
+
+        public int CompareTo(Pokemon other)
+        {
+            return name.CompareTo(other.name);
+        }
     }
 
     class Pokedex
     {
-        internal Dictionary<string,Pokemon> Inventory { get; set; }
-
+        internal Dictionary<string, Pokemon> Inventory { get; set; }
     }
 
     class AppBase
