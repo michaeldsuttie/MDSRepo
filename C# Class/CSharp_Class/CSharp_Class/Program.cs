@@ -138,39 +138,96 @@ namespace CSharp_Class
     #endregion
 
     #region LISKOV
+    //class Program
+    //{
+    //    //If a behavior is changed in an derived class, it's implementation should still work for references to the base class.
+    //    static void Main(string[] args)
+    //    {
+    //        NetworkPing np = new NetworkPing();
+    //        Console.WriteLine($"NetworkPing: {np.PingServer()}"); //true
+    //        np = new PingPing();
+    //        Console.WriteLine($"PingPing w/o Connect(): {np.PingServer()}"); //false
+    //        PingPing pp = new PingPing();
+    //        pp.Connect();
+    //        Console.WriteLine($"PingPing w Connect(): {pp.PingServer()}"); //true
+
+    //        Console.ReadKey();
+    //    }
+    //}
+
+    //class NetworkPing
+    //{
+    //    protected bool Connected = true;
+    //    internal bool PingServer()
+    //    {
+    //        return Connected;
+    //    }
+    //}
+
+    //class PingPing : NetworkPing
+    //{
+    //    internal void Connect()
+    //    {
+    //        Connected = false;
+    //    }
+    //}
+
+    #endregion
+
+    #region Interfaces
     class Program
     {
-        //If a behavior is changed in an derived class, it's implementation should still work for references to the base class.
         static void Main(string[] args)
         {
-            NetworkPing np = new NetworkPing();
-            Console.WriteLine($"NetworkPing: {np.PingServer()}"); //true
-            np = new PingPing();
-            Console.WriteLine($"PingPing w/o Connect(): {np.PingServer()}"); //false
-            PingPing pp = new PingPing();
-            pp.Connect();
-            Console.WriteLine($"PingPing w Connect(): {pp.PingServer()}"); //true
+            Console.WriteLine($"");
 
             Console.ReadKey();
         }
     }
 
-    class NetworkPing
+    class Class1 : IDisposable
     {
-        protected bool Connected = true;
-        internal bool PingServer()
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
         {
-            return Connected;
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
         }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~Class1() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
+
     }
 
-    class PingPing : NetworkPing
+    interface i
     {
-        internal void Connect()
-        {
-            Connected = false;
-        }
-    }
 
+    }
     #endregion
 }
