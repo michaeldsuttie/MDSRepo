@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.IO;
-using NLog;
-using NLog.Targets;
-using Microsoft.Office.Interop.Excel;
-using System.Reflection;
-using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace PoGo_LuckyEggCalc
+namespace DST_PMUtility
 {
-    class Program : AppBase
+    class Program
     {
-        public List<Pokemon> Pokedex { get; set; }
-
         static void Main(string[] args)
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
@@ -69,13 +62,7 @@ namespace PoGo_LuckyEggCalc
 
             ExitApp();
             goto RERUN;
+
         }
     }
-
-
-
-
-
-
-
 }
