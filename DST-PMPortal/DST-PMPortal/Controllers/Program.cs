@@ -13,11 +13,12 @@ namespace DST_PMPortal.Controllers
         {
             DebugLog = ConfigLogger(DebugLog, "DebugLog");
             WriteToLog(DebugLog, "info", $"{Assembly.GetExecutingAssembly().FullName}", false);
+            //var user =
             var workingDir = AppDomain.CurrentDomain.BaseDirectory;
-            var jsonFileName = "pokedex.json";
+            var jsonFileName = "Portfolio.json";
             var jsonFilePath = $"{workingDir}{jsonFileName}";
 
-            var excelFileName = "pokedex.xlsx";
+            var excelFileName = "Portfolio.xlsx";
             var excelFilePath = $"{workingDir}{excelFileName}";
 
         RERUN:

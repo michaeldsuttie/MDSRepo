@@ -24,15 +24,20 @@ namespace DST_PMPortal
         [DataMember]
         internal string PMName;
 
-        [DataMember]
-        internal int candyToEvolve;
-        [DataMember]
-        internal string nextStage;
-
         public int CompareTo(Project other)
         {
             return TName.CompareTo(other.TName);
         }
-    }
 
+        //[Key]
+        //[DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int ProjectId { get; set; } //uses Toggl Project Id for Primary Key
+        public string Name { get; set; }
+        public string Client { get; set; }
+        public string JobTrackProject { get; set; }
+        //public virtual ObservableCollection<Task> Tasks { get; set; }
+        //[NotMapped]
+        //public bool Modified { get; set; }
+
+    }
 }
