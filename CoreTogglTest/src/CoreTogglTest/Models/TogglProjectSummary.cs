@@ -7,10 +7,14 @@ namespace CoreTogglTest.Models
 {
     public class TogglProjectSummary
     {
-        public int Id { get; set; }
+        public TogglProjectSummary()
+        {
+            //Id = -1;
+            Name = "Undefined";
+            TaskSummaries = new Dictionary<string, TogglTaskSummary>();
+        }
+        //public int Id { get; set; }
         public string Name { get; set; }
-        //public Dictionary<string,List<double> UserTaskSummary { get; set; }
-
-
+        public Dictionary<string,TogglTaskSummary> TaskSummaries { get; set; }
     }
 }

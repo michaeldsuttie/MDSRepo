@@ -37,6 +37,11 @@ namespace CoreTogglTest
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
+            //services.Configure<IISOptions>(options =>
+            //{
+
+            //});
+
             services.AddMvc();
         }
 

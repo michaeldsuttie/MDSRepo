@@ -27,7 +27,7 @@ namespace CoreTogglTest.Controllers
 
         // GET api/TogglProject/16081
         [HttpGet("{_projectNumber}")]
-        public async Task<TogglProject> Get(string _projectNumber)
+        public async Task<TogglProject> GetProjectDetail(string _projectNumber)
         {
             if (TogglProjects == null) TogglProjects = await TogglDataService.GetProjects();
             return TogglProjects.Where(x => x.Name.Contains(_projectNumber)).FirstOrDefault();
@@ -46,7 +46,7 @@ namespace CoreTogglTest.Controllers
 
         // GET api/TogglProject/16081/2016-10-07_2016-10-07
         [HttpGet("{_projectNumber}/{_since}_{_until}")]
-        public async Task<IEnumerable<TogglTimeEntry>> Get(string _projectNumber, string _since, string _until)
+        public async Task<IEnumerable<TogglTimeEntry>> GetProjectEntries(string _projectNumber, string _since, string _until)
         {
             if (TogglProjects == null) TogglProjects = await TogglDataService.GetProjects();
             var TogglTimeEntries = await TogglDataService.GetData(DateTime.Parse(_since), DateTime.Parse(_until));
@@ -55,45 +55,52 @@ namespace CoreTogglTest.Controllers
             return TogglProjectTimeEntries;
         }
 
-        // GET api/TogglProject/16081/2016-10-07_2016-10-07/Summary
-        [HttpGet("{_projectNumber}/{_since}_{_until}/{_summary}")]
-        public async Task<IEnumerable<TogglTimeEntry>> Get(string _projectNumber, string _since, string _until, string _summary)
+        // GET api/TogglProject/16081/2016-10-07_2016-10-07/summary
+        [HttpGet("{_projectNumber}/{_since}_{_until}/summary")]
+        public async Task<TogglProjectSummary> GetProjectSummary(string _projectNumber, string _since, string _until)
         {
             if (TogglProjects == null) TogglProjects = await TogglDataService.GetProjects();
             var TogglTimeEntries = await TogglDataService.GetData(DateTime.Parse(_since), DateTime.Parse(_until));
             var filteredTogglTimeEntries = TogglTimeEntries.Where(x => x.Project != null);
             TogglProjectTimeEntries = filteredTogglTimeEntries.Where(x => x.Project.Contains(_projectNumber));
 
+            var ProjectSummary = SummarizeProjectEntries(TogglProjectTimeEntries);
 
-
-            return TogglProjectTimeEntries;
+            return ProjectSummary;
         }
 
-        public TogglProjectSummary SummarizeEntries(IEnumerable<TogglTimeEntry> entries)
+        public TogglProjectSummary SummarizeProjectEntries(IEnumerable<TogglTimeEntry> entries)
         {
             var togglProjectSummary = new TogglProjectSummary();
+            togglProjectSummary.Name = entries.FirstOrDefault().Project;
 
-            var userEntryGroups = entries.GroupBy(x => x.User);
-            foreach(var userEntryGroup in userEntryGroups)
+            var TaskGroups = entries.GroupBy(x => x.Task);
+            foreach (var TaskGroup in TaskGroups)
             {
-                var userTaskGroups = userEntryGroup.GroupBy(x => x.Task);
-                foreach(var userTaskGroup in userTaskGroups)
+                var task = TaskGroup.FirstOrDefault().Task ?? "Task Null";
+                if (!togglProjectSummary.TaskSummaries.ContainsKey(task)) togglProjectSummary.TaskSummaries.Add(task, new TogglTaskSummary());
+
+                var userGroups = TaskGroup.GroupBy(x => x.User);
+                foreach (var userGroup in userGroups)
                 {
+                    var user = userGroup.FirstOrDefault().User;
+                    if (!togglProjectSummary.TaskSummaries[task].UserTaskSummaries.ContainsKey(user)) togglProjectSummary.TaskSummaries[task].UserTaskSummaries.Add(user, 0);
+
                     double totalMilliseconds = 0;
                     double totalHours = 0;
-                    string totalDescription = "";
-                    string seperator = "";
-                    string previousDiscription = "";
+                    //string totalDescription = "";
+                    //string seperator = "";
+                    //string previousDiscription = "";
 
-                    foreach (var e in userTaskGroup)
+                    foreach (var e in userGroup)
                     {
                         totalMilliseconds += e.Duration;
-                        if (e.Description != previousDiscription)
-                        {
-                            totalDescription += seperator + e.Description;
-                            seperator = "; ";
-                        }
-                        previousDiscription = e.Description;
+                        //if (e.Description != previousDiscription)
+                        //{
+                        //    totalDescription += seperator + e.Description;
+                        //    seperator = "; ";
+                        //}
+                        //previousDiscription = e.Description;
                     }
 
                     if (totalMilliseconds <= 60000)
@@ -104,7 +111,11 @@ namespace CoreTogglTest.Controllers
                     {
                         totalHours = RoundToQuarterHour(totalMilliseconds);
                     }
-
+                    togglProjectSummary.TaskSummaries[task].UserTaskSummaries[user] = totalHours;
+                }
+                foreach(var u in togglProjectSummary.TaskSummaries[task].UserTaskSummaries)
+                {
+                    togglProjectSummary.TaskSummaries[task].TotalTaskHours += togglProjectSummary.TaskSummaries[task].UserTaskSummaries[u.Key]; 
                 }
             }
             return togglProjectSummary;
@@ -129,6 +140,5 @@ namespace CoreTogglTest.Controllers
             }
             return value;
         }
-
     }
 }
