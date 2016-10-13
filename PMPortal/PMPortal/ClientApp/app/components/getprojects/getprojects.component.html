@@ -1,0 +1,20 @@
+<h1>Get Projects</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+<p *ngIf="!projects"><em>Loading...</em></p>
+
+<table class='table' *ngIf="projects">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Id</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let project of projects">
+            <td>{{ project.name }}</td>
+            <td>{{project.id}}</td>
+        </tr>
+    </tbody>
+</table>

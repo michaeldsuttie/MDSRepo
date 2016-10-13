@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 
 namespace CoreTogglTest.Models
 {
-    interface IProjectRepository
+    interface IRepository
     {
+        Task<IEnumerable<TogglProject>> GetAll(DateTime Since, DateTime Until);
+
         void Add(TogglProject item);
-        IEnumerable<TogglProject> GetAll();
         TogglProject Find(string key);
         TogglProject Remove(string key);
         void Update(TogglProject item);
+        void Refresh();
     }
 }

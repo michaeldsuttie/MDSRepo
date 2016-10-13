@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CoreTogglTest.Models;
+using PMPortal.ServerApp.Models;
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.IO;
 using Newtonsoft.Json.Linq;
 
-namespace CoreTogglTest.Controllers
+namespace PMPortal.ServerApp.Services
 {
     public class TogglDataService
     {
-        static internal string CreateAuthHeader()
+        static private string CreateAuthHeader()
         {
             string apiToken = "a2e7f93070afe8475626141477fec42b";
             string userPass = $"{apiToken}:api_token";
@@ -215,6 +215,64 @@ namespace CoreTogglTest.Controllers
             }
         }
 
+        static internal TogglProjectSummary SummarizeProjectEntries(IEnumerable<TogglTimeEntry> entries)
+        {
+            var user = "";
+            var task = "";
+            var togglProjectSummary = new TogglProjectSummary();
 
+            togglProjectSummary.Name = entries.FirstOrDefault().Project;
+
+            var userGroups = entries.GroupBy(x => x.User);
+            foreach (var userGroup in userGroups)
+            {
+                var dateGroups = userGroup.GroupBy(x => x.Start.Date);
+                foreach (var dateGroup in dateGroups)
+                {
+                    var taskGroups = dateGroup.GroupBy(x => x.Task);
+                    foreach (var taskGroup in taskGroups)
+                    {
+                        double totalMilliseconds = 0;
+
+                        task = taskGroup.FirstOrDefault().Task ?? "Task Null";
+                        user = userGroup.FirstOrDefault().User;
+
+                        if (!togglProjectSummary.TaskSummaries.ContainsKey(task)) togglProjectSummary.TaskSummaries.Add(task, new TogglTaskSummary());
+
+                        if (!togglProjectSummary.TaskSummaries[task].UserTaskSummaries.ContainsKey(user)) togglProjectSummary.TaskSummaries[task].UserTaskSummaries.Add(user, 0);
+
+                        foreach (var e in taskGroup)
+                        {
+                            totalMilliseconds += e.Duration;
+                        }
+
+                        if (totalMilliseconds <= 60000) continue;
+
+                        togglProjectSummary.TaskSummaries[task].UserTaskSummaries[user] += RoundToQuarterHour(totalMilliseconds);
+                        togglProjectSummary.TaskSummaries[task].TotalTaskHours += RoundToQuarterHour(totalMilliseconds);
+                    }
+                }
+            }
+            return togglProjectSummary;
+        }
+
+        static private double RoundToQuarterHour(double milliseconds)
+        {
+            double hours = milliseconds / 1000.0 / 60.0;
+            double remainder = hours % 15.0;
+            if (remainder < 7.5)
+            {
+                hours -= remainder;
+            }
+            else
+            {
+                hours += 15.0 - remainder;
+            }
+
+            double decimalHours = hours / 60.0;
+            if (decimalHours < .25) decimalHours = .25;
+
+            return decimalHours;
+        }
     }
 }
