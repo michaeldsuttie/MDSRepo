@@ -9,6 +9,7 @@ namespace PMPortal.ServerApp.Models
     internal class Repository:IRepository
     {
         public IEnumerable<TogglProject> TogglProjects { get; set; }
+        public TogglProjectBillingSummary TogglProjectBillingSummary { get; set; }
         //public IEnumerable<TogglUser> TogglUsers { get; set; }
         public IEnumerable<TogglTimeEntry> TogglProjectTimeEntries { get; set; }
 
@@ -30,6 +31,26 @@ namespace PMPortal.ServerApp.Models
             //    p.Entries = await TogglDataService.GetData(Since, Until);
             //}
             return TogglProjects;
+        }
+
+        public async Task<IEnumerable<TogglProject>> GetProjects()
+        {
+            //if (TogglProjects != null) return TogglProjects;
+            return TogglProjects = await TogglDataService.GetProjects();
+        }
+        public async Task<TogglProjectBillingSummary> GetProjectBillingSummary(string ProjectNumber, DateTime Since, DateTime Until)
+        {
+            //if (TogglProjects != null) return TogglProjects;
+            //return TogglProjects = await TogglDataService.GetProjects();
+
+            if (TogglProjects == null) TogglProjects = await TogglDataService.GetProjects();
+            var TogglTimeEntries = await TogglDataService.GetData(Since, Until);
+            var filteredTogglTimeEntries = TogglTimeEntries.Where(x => x.Project != null);
+            TogglProjectTimeEntries = filteredTogglTimeEntries.Where(x => x.Project.Contains(ProjectNumber));
+
+            var ProjectSummary = TogglDataService.SummarizeProjectEntries(TogglProjectTimeEntries);
+            ProjectSummary.BillingPeriod = $"{Since}_{Until}";
+            return ProjectSummary;
         }
 
         public TogglProject Remove(string key)

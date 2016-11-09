@@ -1,6 +1,24 @@
 <h1>Get Project Time Entries</h1>
-<p>This component demonstrates fetching data from the server.</p>
-<p *ngIf="!entries"><em>Loading...</em></p>
+
+<p *ngIf="!projects"><em>Loading Projects...</em></p>
+
+<!--<select class="form-control" #p (click)="onSelect(p)" *ngIf="projects">
+    <option *ngFor="let project of projects">{{project.name}} | {{project.id}} </option>
+</select>-->
+<select class="form-control" #p (change)="onSelect(p)" *ngIf="projects">
+    <option *ngFor="let project of projects" >{{project.name}} | {{project.id}} </option>
+</select>
+
+
+<input value="{{selectedProject}}" placeholder="no project" *ngIf="selectedProject" />
+<input value="{{selectedProject.value}}" placeholder="no project value" *ngIf="selectedProject" />
+<!--<input value="{{selectedProject.item(selectedProject.value).text}}" placeholder="no project id" *ngIf="selectedProject" />-->
+
+<!--<input value="{{selectedProjectNumber}}" placeholder="no project" />
+<input value="{{selectedProjectString}}" placeholder="no project value"/>
+<input value="{{selectedProject.item(selectedProject.value)}}" placeholder="no project id"/>-->
+
+<p *ngIf="!entries"><em>Loading Entries...</em></p>
 <table class='table' *ngIf="entries">
     <thead>
         <tr>

@@ -215,11 +215,11 @@ namespace PMPortal.ServerApp.Services
             }
         }
 
-        static internal TogglProjectSummary SummarizeProjectEntries(IEnumerable<TogglTimeEntry> entries)
+        static internal TogglProjectBillingSummary SummarizeProjectEntries(IEnumerable<TogglTimeEntry> entries)
         {
             var user = "";
             var task = "";
-            var togglProjectSummary = new TogglProjectSummary();
+            var togglProjectSummary = new TogglProjectBillingSummary();
 
             togglProjectSummary.Name = entries.FirstOrDefault().Project;
 

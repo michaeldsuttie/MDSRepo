@@ -1,0 +1,40 @@
+<h1>Get Project Time Entries</h1>
+<p>This component demonstrates fetching data from the server.</p>
+
+
+<p *ngIf="!projects"><em>Loading Projects...</em></p>
+
+<table class='table' *ngIf="projects">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Id</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let project of projects">
+            <td>{{ project.name }}</td>
+            <td>{{project.id}}</td>
+        </tr>
+    </tbody>
+</table>
+
+<p *ngIf="!entries"><em>Loading Entries...</em></p>
+<table class='table' *ngIf="entries">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Task</th>
+            <th>User</th>
+            <th>Duration</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let entry of entries">
+            <td>{{entry.start}}</td>
+            <td>{{ entry.task }}</td>
+            <td>{{ entry.user }}</td>
+            <td>{{ entry.duration }}</td>
+        </tr>
+    </tbody>
+</table>

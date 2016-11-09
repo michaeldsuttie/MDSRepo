@@ -16,7 +16,7 @@ namespace PMPortal.Controllers
         [HttpGet("[action]")]
         public async Task<IEnumerable<TogglProject>> GetProjects()
         {
-            return _repo.TogglProjects = await _repo.GetAll(DateTime.Now.AddDays(-14), DateTime.Now);
+            return _repo.TogglProjects = await _repo.GetProjects();
         }
 
         //// GET api/TogglProject/16081
@@ -41,9 +41,9 @@ namespace PMPortal.Controllers
         [HttpGet("[action]")]
         public async Task<IEnumerable<TogglTimeEntry>> GetProjectEntries(string ProjectNumber, DateTime Since, DateTime Until)
         {
-            Since = DateTime.Now.AddDays(-2);
-            Until = DateTime.Now;
-            ProjectNumber = "16081";
+            //if (Since == DateTime.Parse("0001-01-01 00:00:00")) Since = DateTime.Now.AddDays(-2);
+            //if (Until == DateTime.Parse("0001-01-01 00:00:00")) Until = DateTime.Now;
+            //if (ProjectNumber == null) ProjectNumber = "16081";
             if (_repo.TogglProjects == null) _repo.TogglProjects = await TogglDataService.GetProjects();
             var FilteredTogglProjects = _repo.TogglProjects.Where(x => x.Name != null);
             _repo.TogglProjects = FilteredTogglProjects;
@@ -54,20 +54,20 @@ namespace PMPortal.Controllers
             return _repo.TogglProjectTimeEntries;
         }
 
-        //// GET api/TogglProject/16081/2016-10-07_2016-10-07/summary
-        //[HttpGet("{_projectNumber}/summary")]
-        //public async Task<TogglProjectSummary> GetProjectSummary(string _projectNumber, DateTime _since, DateTime _until)
-        //{
+        [HttpGet("[action]")]
+        public async Task<TogglProjectBillingSummary> GetProjectBillingSummary(string ProjectNumber, DateTime Since, DateTime Until)
+        {
+            return _repo.TogglProjectBillingSummary = await _repo.GetProjectBillingSummary(ProjectNumber, Since, Until);
 
-        //    if (_repo.TogglProjects == null) _repo.TogglProjects = await TogglDataService.GetProjects();
-        //    var TogglTimeEntries = await TogglDataService.GetData(_since, _until);
-        //    var filteredTogglTimeEntries = TogglTimeEntries.Where(x => x.Project != null);
-        //    _repo.TogglProjectTimeEntries = filteredTogglTimeEntries.Where(x => x.Project.Contains(_projectNumber));
+            //if (_repo.TogglProjects == null) _repo.TogglProjects = await TogglDataService.GetProjects();
+            //var TogglTimeEntries = await TogglDataService.GetData(Since, Until);
+            //var filteredTogglTimeEntries = TogglTimeEntries.Where(x => x.Project != null);
+            //_repo.TogglProjectTimeEntries = filteredTogglTimeEntries.Where(x => x.Project.Contains(ProjectNumber));
 
-        //    var ProjectSummary = TogglDataService.SummarizeProjectEntries(_repo.TogglProjectTimeEntries);
-        //    ProjectSummary.BillingPeriod = $"{_since}_{_until}";
-        //    return ProjectSummary;
-        //    //return null;
-        //}
+            //var ProjectSummary = TogglDataService.SummarizeProjectEntries(_repo.TogglProjectTimeEntries);
+            //ProjectSummary.BillingPeriod = $"{Since}_{Until}";
+            //return ProjectSummary;
+            ////return null;
+        }
     }
 }

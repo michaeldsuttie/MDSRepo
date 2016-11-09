@@ -1,0 +1,31 @@
+<h1>Project Billing Summary</h1>
+
+<p *ngIf="!projects"><em>Loading Projects...</em></p>
+
+<select class="form-control" #p (change)="onSelect(p)" *ngIf="projects">
+    <option *ngFor="let project of projects">{{project.name}} | {{project.id}} </option>
+</select>
+
+<p *ngIf="!summary"><em>Loading Summary...</em></p>
+
+<div *ngFor="let L0 of summary | objectToArray">
+    <div *ngIf="L0.key === 'name'"> <label>Name:</label> {{L0.value}}</div>
+    <div *ngIf="L0.key === 'billingPeriod'"> <label>Billing Period:</label> {{L0.value}}</div>
+    <div *ngIf="L0.key === 'taskSummaries'">
+        <label>Task Summaries:</label>
+        <div *ngFor="let L1 of L0.value | objectToArray">
+            -- <label>{{L1.key}}:</label>
+            <div *ngFor="let L2 of L1.value | objectToArray">
+                <div *ngIf="L2.key === 'userTaskSummaries'">
+                    <div *ngFor="let L3 of L2.value | objectToArray">
+                        -- -- {{L3.key}}: {{L3.value}}
+                    </div>
+                </div>
+                <div *ngIf="L2.key === 'totalTaskHours'">
+                    -- -- Total: {{L2.value}}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

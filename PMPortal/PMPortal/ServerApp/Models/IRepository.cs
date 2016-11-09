@@ -8,6 +8,10 @@ namespace PMPortal.ServerApp.Models
     interface IRepository
     {
         Task<IEnumerable<TogglProject>> GetAll(DateTime Since, DateTime Until);
+        Task<IEnumerable<TogglProject>> GetProjects();
+        Task<TogglProjectBillingSummary> GetProjectBillingSummary(string ProjectNumber, DateTime Since, DateTime Until);
+
+
 
         void Add(TogglProject item);
         TogglProject Find(string key);

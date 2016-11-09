@@ -16,17 +16,17 @@
                     <a [routerLink]="['/home']">
                         <span class='glyphicon glyphicon-home'></span> Home
                     </a>
-                </li>
-                <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/counter']">
-                        <i class="fa fa-calculator" aria-hidden="true"></i> Counter
-                    </a>
-                </li>
-                <li [routerLinkActive]="['link-active']">
-                    <a [routerLink]="['/fetch-data']">
-                        <span class='glyphicon glyphicon-th-list'></span> Fetch data
-                    </a>
-                </li>
+                </li><!--<li [routerLinkActive]="['link-active']">
+    <a [routerLink]="['/counter']">
+        <i class="fa fa-calculator" aria-hidden="true"></i> Counter
+    </a>
+</li>
+<li [routerLinkActive]="['link-active']">
+    <a [routerLink]="['/fetch-data']">
+        <span class='glyphicon glyphicon-th-list'></span> Fetch data
+    </a>
+</li>-->
+
                 <li [routerLinkActive]="['link-active']">
                     <a [routerLink]="['/get-projects']">
                         <span class='glyphicon glyphicon-th-list'></span> Get Projects
@@ -37,6 +37,12 @@
                         <span class='glyphicon glyphicon-th-list'></span> Get Project Data
                     </a>
                 </li>
+                <li [routerLinkActive]="['link-active']">
+                    <a [routerLink]="['/get-project-billing-summary']">
+                        <span class='glyphicon glyphicon-th-list'></span> Get Project Summary
+                    </a>
+                </li>
+
             </ul>
         </div>
     </div>
