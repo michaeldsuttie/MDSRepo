@@ -58,16 +58,6 @@ namespace PMPortal.Controllers
         public async Task<TogglProjectBillingSummary> GetProjectBillingSummary(string ProjectNumber, DateTime Since, DateTime Until)
         {
             return _repo.TogglProjectBillingSummary = await _repo.GetProjectBillingSummary(ProjectNumber, Since, Until);
-
-            //if (_repo.TogglProjects == null) _repo.TogglProjects = await TogglDataService.GetProjects();
-            //var TogglTimeEntries = await TogglDataService.GetData(Since, Until);
-            //var filteredTogglTimeEntries = TogglTimeEntries.Where(x => x.Project != null);
-            //_repo.TogglProjectTimeEntries = filteredTogglTimeEntries.Where(x => x.Project.Contains(ProjectNumber));
-
-            //var ProjectSummary = TogglDataService.SummarizeProjectEntries(_repo.TogglProjectTimeEntries);
-            //ProjectSummary.BillingPeriod = $"{Since}_{Until}";
-            //return ProjectSummary;
-            ////return null;
         }
     }
 }
