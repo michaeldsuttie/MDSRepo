@@ -11,17 +11,10 @@ namespace DST_PMPortal.Controllers
     {
         private HttpClient CreateClient()
         {
-            //var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
-            //string authInfo = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(String.Format("{0}:{1}", @"OSIPROGHACK\hackuser042", "mc9rn0xf2A$")));
-            //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authInfo);
-            //return client;
-
             var client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
             string authInfo = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(string.Format("{0}:{1}", @"DST-DOM\msuttie", "")));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic");
             return client;
         }
-
-
     }
 }
