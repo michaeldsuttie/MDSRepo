@@ -7,12 +7,11 @@
     <style include="note-app-shared-styles"></style>
     <na-toolbar signed-in="[[signedIn]]" on-sign-out="signOut"></na-toolbar>
     <na-login on-sign-in="signIn" signed-in="[[signedIn]]" disabled="[[!online]]"></na-login>
-    <firebase-auth id="auth" app-name="test01" provider="google" signed-in="{{signedIn}}" user="{{user}}"></firebase-auth>
-
+    <firebase-auth id="auth" app-name="dst-pmportal" provider="google" signed-in="{{signedIn}}" user="{{user}}"></firebase-auth>
     <paper-fab icon="add" on-tap="create" disabled="[[!online]]" aria-label="Add note"></paper-fab>
     <na-editor id="editor" note="{{editableNote}}" on-close="commitChange"></na-editor>
-    <firebase-query id="query" app-name="test01" path="/notes/[[user.uid]]" data="{{notes}}"></firebase-query>
-    <firebase-document id="document" app-name="test01" path="[[editableNoteId]]" data="{{editableNote}}"></firebase-document>
+    <firebase-query id="query" app-name="dst-pmportal" path="/notes/[[user.uid]]" data="{{notes}}"></firebase-query>
+    <firebase-document id="document" app-name="dst-pmportal" path="[[editableNoteId]]" data="{{editableNote}}"></firebase-document>
 
     <app-indexeddb-mirror session="[[user.uid]]" key="notes" data="{{notes}}" persisted-data="{{persistedNotes}}"></app-indexeddb-mirror>
 
@@ -21,6 +20,12 @@
         <na-note id$="[[note.$key]]" title="[[note.title]]" body="[[note.body]]" on-tap="edit"></na-note>
       </template>
     </div>
+
+    <div>
+      <paper-button raised on-tap="GetTogglProjects">Get Toggl Data</paper-button>
+      <span>TogglData: {{togglData}}</span>
+    </div>
+
   </template>
   <script>
     Polymer({
@@ -28,21 +33,31 @@
 
       behaviors: [Polymer.NoteAppBehavior],
 
-    signIn: function() {
-      this.$.auth.signInWithPopup();
-    },
+      signIn: function () {
+        this.$.auth.signInWithPopup();
+      },
 
-    get notesPath(){
-      return '/notes/' + this.user.uid;
-    },
+      get notesPath() {
+        return '/notes/' + this.user.uid;
+      },
 
-    toEditableId: function(noteId){
-      return this.notesPath + '/' + noteId;
-    },
+      toEditableId: function (noteId) {
+        return this.notesPath + '/' + noteId;
+      },
 
-    get isEditable(){
-      return this.online;
-    }
+      get isEditable() {
+        return this.online;
+      },
+
+      GetTogglProjects: function () {
+        var client = new TogglClient(options);
+        this.togglData = client.authData;
+        // this.togglData = 'default Toggl Data';
+        return;
+      },
+
+      GetTogglResponse: function (url) {
+      }
     });
   </script>
 </dom-module>
