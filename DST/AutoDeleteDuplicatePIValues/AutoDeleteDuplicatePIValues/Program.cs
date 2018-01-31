@@ -5,70 +5,58 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PISDK;
+using System.Threading;
+using NLog;
+using NLog.Targets;
+using System.Text.RegularExpressions;
 
 namespace AutoDeleteDuplicatePIValues
 {
     class Program
     {
+        public static Logger DebugLog;
+
         public static string workingDir { get; set; }
         public static string piServerName { get; set; }
         public static string starttime { get; set; }
         public static string endtime { get; set; }
         public static PIPoint piPoint { get; set; }
         public static List<string> TagList { get; set; }
-        public static List<string> Messages { get; set; }
+        //public static StringBuilder Messages { get; set; }
 
         static void Main(string[] args)
         {
-            string workingDir = AppDomain.CurrentDomain.BaseDirectory + "tagList.csv";
-            Messages = new List<string>();
+            //Messages = new StringBuilder();
+            UpdateLogger();
+            string workingDir = $"{AppDomain.CurrentDomain.BaseDirectory}tagList.csv";
             TagList = new List<string>();
 
             parseCSVtoList(workingDir);
 
-            Console.WriteLine("Working Directory: {0}", workingDir);
-            Messages.Add(string.Format("Working Directory:,{0}", workingDir));
-            Console.WriteLine("PI Server: {0}", piServerName);
-            Messages.Add(string.Format("PI Server:,{0}", piServerName));
-            Console.WriteLine("Start Time: {0}", starttime);
-            Messages.Add(string.Format("Start Time:,{0}", starttime));
-            Console.WriteLine("End Time: {0}", endtime);
-            Messages.Add(string.Format("End Time:,{0}", endtime));
+            WriteToLogs($"Working Directory: {workingDir}");
+            WriteToLogs($"PI Server: {piServerName}");
+            WriteToLogs($"Start Time: {starttime}");
+            WriteToLogs($"End Time: {endtime}");
 
+            int i = 1;
+            WriteToLogs($"Will Process Tags:");
             foreach (var tag in TagList)
             {
-                Console.WriteLine("Will process tag: {0}", tag);
+                WriteToLogs($"Tag {i} of {TagList.Count} | {tag}");
+                i++;
             }
 
-            Console.WriteLine("Enter 'clearalldata' to only remove all values for tag over timerange. Else, press Enter to remove Duplicate values only.");
-            var response = Console.ReadLine();
-            if (response.ToString() == "clearalldata")
+            if (PromptUser("remove duplicate values", "enter"))
             {
-                Console.WriteLine("Will remove all values for selected points over timerange.");
-                Console.WriteLine("Press Enter To Continue...");
-                Console.ReadLine();
-                Console.WriteLine(Environment.NewLine);
-                Console.WriteLine(Environment.NewLine);
-
-                RemoveAllValues();
-            }
-            else
-            {
-                Console.WriteLine("Will remove duplicate values for selected points over timerange.");
-                Console.WriteLine("Press Enter To Continue...");
-                Console.ReadLine();
-                Console.WriteLine(Environment.NewLine);
-                Console.WriteLine(Environment.NewLine);
-
                 RemoveDuplicateValues();
+                ExitApp();
             }
-
-
-            Messages.Add(string.Format("Process Completed"));
-
-            WriteToFile(Messages);
-            Console.WriteLine("Press Enter To Exit...");
-            Console.ReadLine();
+            //else if (PromptUser("remove all values", "enter"))
+            //{
+            //    RemoveAllValues();
+            //    ExitApp();
+            //}
+            ExitApp();
         }
 
         public static void RemoveDuplicateValues()
@@ -78,153 +66,132 @@ namespace AutoDeleteDuplicatePIValues
 
             foreach (var tag in TagList)
             {
-                if (tag.Contains(piServerName) || tag.Contains(starttime) || tag.Contains(endtime) || tag.Contains(workingDir))
-                {
-                    continue;
-                }
-                Console.WriteLine("Clearing Duplicates for: " + tag);
+                WriteToLogs($"Tag {currentTagNum} of {tagCount} | Tag: {tag} | Checking for duplicates.");
                 int TotalEventsDeleted = 0;
-
 
                 var piValues = getPIValues(tag);
                 if (piValues == null)
                 {
+                    currentTagNum++;
                     continue;
                 }
-
-                //Find Duplicates
-                PIValue tmpValue = null;
 
                 int valueCount = piValues.Count;
                 int currentValueNum = 1;
 
-
+                PIValue previousValue = null;
                 foreach (PIValue currentValue in piValues)
                 {
-                    if (tmpValue == null)
+                    if (previousValue == null)
                     {
-                        tmpValue = currentValue;
+                        previousValue = currentValue;
                         continue;
                     }
-                    else if (currentValue.TimeStamp.UTCSeconds == tmpValue.TimeStamp.UTCSeconds)
+                    else if (currentValue.TimeStamp.UTCSeconds == previousValue.TimeStamp.UTCSeconds)
                     {
-                        if (currentValue.Value <= tmpValue.Value)
+                        //int int1;
+                        //int int2;
+                        //double double1;
+                        //double double2;
+
+                        //bool ints = int.TryParse(currentValue.Value, out int1) && int.TryParse(currentValue.Value, out int2);
+                        //bool doubles = double.TryParse(currentValue.Value, out double1) && double.TryParse(currentValue.Value, out double2);
+                        if (currentValue.Value.ToString().ToLower() == "system.__comobject" || previousValue.Value.ToString().ToLower() == "system.__comobject")
                         {
-                            Console.WriteLine(string.Format("{0}, {1}", currentValue.Value.ToString(), currentValue.TimeStamp.LocalDate.ToString()));
-                            Messages.Add(string.Format("{0},{1},{2},{3}", "KEPT", tag, tmpValue.Value.ToString(), tmpValue.TimeStamp.LocalDate.ToString()));
-                            Messages.Add(string.Format("{0},{1},{2},{3}", "REMOVED", tag, currentValue.Value.ToString(), currentValue.TimeStamp.LocalDate.ToString()));
+                            WriteToLogs($"Values are not comparable. Moving to next Value.");
+                            currentValueNum++;
+                            continue;
+                        }
+
+                        string pattern = "[0 - 9] +.[0 - 9] +|[0 - 9]";
+                        
+                        var cVal = Regex.Match(currentValue.Value, pattern);
+                        var pVal = Regex.Match(previousValue.Value, pattern);
+
+                        if (cVal == string.Empty || pVal == string.Empty)
+                        {
+                            WriteToLogs($"Values are not comparable. Moving to next Value.");
+                            currentValueNum++;
+                            continue;
+                        }
+                        if (currentValue.Value == previousValue.Value)
+                        {
                             try
                             {
                                 piPoint.Data.RemoveValues(currentValue.TimeStamp.UTCSeconds, currentValue.TimeStamp.UTCSeconds, DataRemovalConstants.drRemoveFirstOnly);
+                                WriteToLogs($"Tag {currentTagNum} of {tagCount} | KEPT: {previousValue.TimeStamp.LocalDate.ToString("dd-MMM-yyyy HH:mm:ss:ms")} {previousValue.Value} | REMOVED: {currentValue.TimeStamp.LocalDate.ToString("dd-MMM-yyyy HH:mm:ss:ms")} {currentValue.Value}");
+                                currentValueNum++;
+                                TotalEventsDeleted++;
+                                continue;
                             }
-                            catch (Exception deleteE)
+                            catch (Exception EX_RemoveDuplicateValues)
                             {
-                                Console.WriteLine(string.Format("There was an error while deleting a duplicate value for tag:,{0}", tag));
-                                Messages.Add(string.Format("{0},There was an error while deleting a duplicate value for tag", tag, tag));
-                                Console.WriteLine(deleteE.ToString());
+                                WriteToLogs($"Tag {currentTagNum} of {tagCount} | Tag: {tag} | Error Deleting Value. Moving to next tag. Run utility again to remove ramining values. {EX_RemoveDuplicateValues.ToString()}");
+                                currentValueNum++;
+                                goto NextTag;
                             }
-                            TotalEventsDeleted++;
                         }
-                        else if (tmpValue.Value <= currentValue.Value)
-                        {
-                            Console.WriteLine(tmpValue.Value.ToString() + " " + tmpValue.TimeStamp.LocalDate.ToString());
-                            try
-                            {
-                                piPoint.Data.RemoveValues(tmpValue.TimeStamp.UTCSeconds, tmpValue.TimeStamp.UTCSeconds, DataRemovalConstants.drRemoveFirstOnly);
-                            }
-                            catch (Exception deleteE)
-                            {
-                                Console.WriteLine(string.Format("There was an error while deleting a duplicate value for tag: {0}", tag));
-                                Messages.Add(string.Format("{0},There was an error while deleting a duplicate value for tag", tag));
-                                Console.WriteLine(deleteE.ToString());
-                            }
-                            TotalEventsDeleted++;
-                        }
+                        currentValueNum++;
                     }
-
                     else
                     {
-                        tmpValue = currentValue;
+                        //WriteToLogs($"Tag {currentTagNum} of {tagCount} | Value {currentValueNum} of {valueCount} | KEPT: {previousValue.TimeStamp.LocalDate.ToString("dd-MMM-yyyy HH:mm:ss")} {previousValue.Value.ToString()}");
+                        previousValue = currentValue;
+                        currentValueNum++;
                     }
                 }
-
-                if (TotalEventsDeleted == 0)
-                {
-                    Console.WriteLine(string.Format("No duplicate events for tag: {0}", tag));
-                    Messages.Add(string.Format("{0},No duplicate events for tag", tag));
-                    Console.WriteLine(Environment.NewLine);
-                }
-                else
-                {
-                    Console.WriteLine(string.Format("{0} events have been deleted for tag: {1}", TotalEventsDeleted, tag));
-                    Console.WriteLine(Environment.NewLine);
-                    Messages.Add(string.Format("{0},{1} events have been deleted for tag", tag, TotalEventsDeleted));
-                }
-            }
-        }
-
-        public static void RemoveAllValues()
-        {
-
-            int tagCount = TagList.Count();
-            int currentTagNum = 1;
-
-            foreach (var tag in TagList)
-            {
-                if (tag.Contains(piServerName) || tag.Contains(starttime) || tag.Contains(endtime) || tag.Contains(workingDir))
-                {
-                    continue;
-                }
-                Console.WriteLine("Clearing all values for: " + tag);
-                int TotalEventsDeleted = 0;
-
-                var piValues = getPIValues(tag);
-                if (piValues == null)
-                {
-                    continue;
-                }
-
-                int valueCount = piValues.Count;
-                int currentValueNum = 1;
-
-                foreach (PIValue value in piValues)
-                {
-                    Console.WriteLine(string.Format("(TAG {0} of {1}),(VALUE {2} of {3}),{4}, {5}", currentTagNum, tagCount, currentValueNum, valueCount, value.TimeStamp.LocalDate.ToString(), value.Value.ToString()));
-                    Messages.Add(string.Format("(TAG {0} of {1}),(VALUE {2} of {3}),{4},{5},{6}", currentTagNum, tagCount, currentValueNum, valueCount, tag, value.TimeStamp.LocalDate.ToString(), value.Value.ToString()));
-                    try
-                    {
-                        piPoint.Data.RemoveValues(value.TimeStamp.UTCSeconds, value.TimeStamp.UTCSeconds, DataRemovalConstants.drRemoveFirstOnly);
-                    }
-                    catch (Exception deleteE)
-                    {
-                        Console.WriteLine(string.Format("There was an error while deleting a value for tag:,{0}", tag));
-                        Messages.Add(string.Format("{0},There was an error while deleting a value for tag", tag, tag));
-                        Console.WriteLine(deleteE.ToString());
-                    }
-                    currentValueNum++;
-                    TotalEventsDeleted++;
-                }
-
-                if (TotalEventsDeleted == 0)
-                {
-                    Console.WriteLine(string.Format("No events found for tag: {0}", tag));
-                    Messages.Add(string.Format("{0},No values found for tag", tag));
-                    Console.WriteLine(Environment.NewLine);
-                }
-                else
-                {
-                    Console.WriteLine(string.Format("{0} events have been deleted for tag: {1}", TotalEventsDeleted, tag));
-                    Console.WriteLine(Environment.NewLine);
-                    Messages.Add(string.Format("{0},{1} events have been deleted for tag", tag, TotalEventsDeleted));
-                }
+            NextTag:
+                if (TotalEventsDeleted == 0) WriteToLogs($"Tag {currentTagNum} of {tagCount} | Tag: {tag} | No Duplicate Events Found.");
+                else WriteToLogs($"Tag {currentTagNum} of {tagCount} | Tag: {tag} | Duplicate Values Deleted: {TotalEventsDeleted}");
                 currentTagNum++;
             }
         }
 
+        //public static void RemoveAllValues()
+        //{
+        //    int tagCount = TagList.Count();
+        //    int currentTagNum = 1;
+
+        //    foreach (var tag in TagList)
+        //    {
+        //        WriteToLogs($"Tag: {tag} | Clearing All Values");
+        //        int TotalEventsDeleted = 0;
+
+        //        var piValues = getPIValues(tag);
+        //        if (piValues == null) continue;
+
+        //        int valueCount = piValues.Count;
+        //        int currentValueNum = 1;
+
+        //        foreach (PIValue value in piValues)
+        //        {
+        //            WriteToLogs($"Tag {currentTagNum} of {tagCount} | Value {currentValueNum} of {valueCount} | {value.TimeStamp.LocalDate.ToString()}: {value.Value.ToString()}");
+        //            try
+        //            {
+        //                piPoint.Data.RemoveValues(value.TimeStamp.UTCSeconds, value.TimeStamp.UTCSeconds, DataRemovalConstants.drRemoveFirstOnly);
+        //            }
+        //            catch (Exception EX_RemoveAllValues)
+        //            {
+        //                WriteToLogs($"Tag: {tag} | Error Deleting Value. {EX_RemoveAllValues.ToString()}");
+        //            }
+        //            currentValueNum++;
+        //            TotalEventsDeleted++;
+        //        }
+
+        //        if (TotalEventsDeleted == 0) WriteToLogs($"Tag: {tag} | No Events Found.");
+        //        else WriteToLogs($"Tag: {tag} | Events Deleted: {TotalEventsDeleted}");
+        //        currentTagNum++;
+        //    }
+        //}
+
         public static void parseCSVtoList(string path)
         {
             TagList.Clear();
-
+            if (!File.Exists(path))
+            {
+                WriteToLogs($"File not found or in use. {path}");
+                ExitApp();
+            }
             using (StreamReader readFile = new StreamReader(path))
             {
                 string line;
@@ -234,29 +201,11 @@ namespace AutoDeleteDuplicatePIValues
                 while ((line = readFile.ReadLine()) != null)
                 {
                     row = line.Split(',');
-                    if (row[0].Contains("x"))
-                    {
-                        string tagName = row[1];
-                        TagList.Add(tagName);
-                    }
-                    else if (row[0].Contains("startTime"))
-                    {
-                        var startTimeDT = DateTime.Parse(row[1]);
-                        starttime = startTimeDT.ToString("dd-MMM-yyyy hh:mm:ss");
-                    }
-                    else if (row[0].Contains("endTime"))
-                    {
-                        var endTimeDT = DateTime.Parse(row[1]);
-                        endtime = endTimeDT.ToString("dd-MMM-yyyy hh:mm:ss");
-                    }
-                    else if (row[0].Contains("piServer"))
-                    {
-                        piServerName = row[1];
-                    }
-                    else if (row[0].Contains("workingDirectory"))
-                    {
-                        workingDir = row[1];
-                    }
+                    if (row[0].ToLower().Contains("x")) TagList.Add(row[1]);
+                    else if (row[0].ToLower().Contains("starttime")) starttime = DateTime.Parse(row[1]).ToString("dd-MMM-yyyy HH:mm:ss");
+                    else if (row[0].ToLower().Contains("endtime")) endtime = DateTime.Parse(row[1]).ToString("dd-MMM-yyyy HH:mm:ss");
+                    else if (row[0].ToLower().Contains("piserver")) piServerName = row[1];
+                    else if (row[0].ToLower().Contains("workingdirectory")) workingDir = row[1];
                     rowCount += 1;
                 }
             }
@@ -274,48 +223,89 @@ namespace AutoDeleteDuplicatePIValues
             }
             catch
             {
-                Console.WriteLine(string.Format("{0} Not Found", tag));
+                WriteToLogs($"Tag: {tag} | Not Found.");
+                return null;
             }
 
             try
             {
-                piPoint = piServer.PIPoints[tag];
+                //string starttimeUTC = DateTime.Parse(starttime).ToUniversalTime().ToString();
+                //string endtimeUTC = DateTime.Parse(endtime).ToUniversalTime().ToString();
                 _piValues = piPoint.Data.RecordedValues(starttime, endtime, BoundaryTypeConstants.btInside);
+
+                int i = 1;
+                foreach (PIValue v in _piValues)
+                {
+                    WriteToLogs($"Tag: {tag} | Value {i} of {_piValues.Count} | Value: {v.TimeStamp.LocalDate.ToString()} | {v.Value}", true);
+                    i++;
+                }
                 return _piValues;
             }
-            catch (Exception collectionE)
+            catch (Exception EX_getPIValues)
             {
-                Console.WriteLine(collectionE.ToString());
-                Console.WriteLine("There was an error collecting archived data from PI for PI Server: " + piServerName);
+                WriteToLogs($"There was an error collecting archived data from PI Server: {piServerName}. {EX_getPIValues.ToString()}");
             }
             return null;
         }
+        //private static void WriteSBToFile(StringBuilder sb)
+        //{
+        //    string fileName = "Log";
+        //    string filePathBase = AppDomain.CurrentDomain.BaseDirectory;
+        //    if (!Directory.Exists(filePathBase)) Directory.CreateDirectory(filePathBase);
+        //    string filePath = $"{filePathBase}{fileName}";
 
-        private static void WriteToFile(List<string> messages)
+        //    var FilePathFormat = filePath + "{0}";
+        //    int i = 1;
+        //    while (File.Exists($"{filePath}.csv")) filePath = string.Format(FilePathFormat, $"({(i++)})");
+
+        //    StreamWriter sw = new StreamWriter(filePath + ".csv", true);
+        //    sw.Write(Messages.ToString());
+        //    sw.Flush();
+        //    sw.Close();
+        //}
+        private static void WriteToLogs(string message, bool suppress = false)
         {
-            string fileName = "Log";
-            string filePath = AppDomain.CurrentDomain.BaseDirectory;
-            if (!Directory.Exists(filePath))
+            //string m = $"{DateTime.Now}: {message}";
+            //Messages.AppendLine(m);
+            DebugLog.Debug(message);
+            if (suppress) return;
+            Console.WriteLine(message);
+        }
+        private static bool PromptUser(string action, string key)
+        {
+            ConsoleKey ck = new ConsoleKey();
+            switch (key.ToLower())
             {
-                Directory.CreateDirectory(filePath);
+                case "enter":
+                    ck = ConsoleKey.Enter;
+                    break;
+                case "escape":
+                    ck = ConsoleKey.Escape;
+                    break;
             }
-            fileName = filePath + fileName;
-
-            var FileNameFormat = fileName + "{0}";
-            int i = 1;
-            while (File.Exists(fileName + ".csv"))
+            WriteToLogs($"Press '{key.ToLower()}' to {action}. Press 'Space' to continue.");
+            if (Console.ReadKey(true).Key == ck)
             {
-                fileName = string.Format(FileNameFormat, "(" + (i++) + ")");
+                WriteToLogs($"Are you sure you would like to {action}? Press '{key}' to confirm or press 'space' to continue.");
+                return Console.ReadKey(true).Key == ck;
             }
-
-            StreamWriter sw = new StreamWriter(fileName + ".csv", true);
-            foreach (var message in messages)
-            {
-                sw.Write(message);
-                sw.Write(Environment.NewLine);
-            }
-            sw.Flush();
-            sw.Close();
+            return false;
+        }
+        public static void UpdateLogger()
+        {
+            string[] unSplit = System.Security.Principal.WindowsIdentity.GetCurrent().Name.ToLower().Split('\\');
+            string domain = unSplit[0];
+            string userName = unSplit[1];
+            DebugLog = LogManager.GetLogger("DebugLog");
+            var debugFileTarget = (FileTarget)LogManager.Configuration.LoggingRules.First().Targets.First();
+            debugFileTarget.FileName = $@"{AppDomain.CurrentDomain.BaseDirectory}\Logs\{DateTime.Now.ToString("yyyy-MM-dd")}\{DateTime.Now.ToString("HH-mm-ss")}_{userName}_DEBUG.txt";
+            LogManager.ReconfigExistingLoggers();
+        }
+        public static void ExitApp()
+        {
+            WriteToLogs($"Exiting app. Check log for details. Press any key to continue.");
+            Console.ReadKey();
+            Environment.Exit(-1);
         }
     }
 }
